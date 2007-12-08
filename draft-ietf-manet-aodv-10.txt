@@ -1,0 +1,1824 @@
+
+Mobile Ad Hoc Networking Working Group                Charles E. Perkins
+INTERNET DRAFT                                     Nokia Research Center
+19 January 2002                               Elizabeth M. Belding-Royer
+                                 University of California, Santa Barbara
+                                                            Samir R. Das
+                                                University of Cincinnati
+
+            Ad hoc On-Demand Distance Vector (AODV) Routing
+                      draft-ietf-manet-aodv-10.txt
+
+
+Status of This Memo
+
+   This document is a submission by the Mobile Ad Hoc Networking Working
+   Group of the Internet Engineering Task Force (IETF).  Comments should
+   be submitted to the manet@itd.nrl.navy.mil mailing list.
+
+   Distribution of this memo is unlimited.
+
+   This document is an Internet-Draft and is in full conformance with
+   all provisions of Section 10 of RFC2026.  Internet-Drafts are working
+   documents of the Internet Engineering Task Force (IETF), its areas,
+   and its working groups.  Note that other groups may also distribute
+   working documents as Internet-Drafts.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at
+   any time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   The list of current Internet-Drafts can be accessed at:
+        http://www.ietf.org/ietf/1id-abstracts.txt
+   The list of Internet-Draft Shadow Directories can be accessed at:
+        http://www.ietf.org/shadow.html.
+
+
+Abstract
+
+   The Ad hoc On-Demand Distance Vector (AODV) routing protocol
+   is intended for use by mobile nodes in an ad hoc network.  It
+   offers quick adaptation to dynamic link conditions, low processing
+   and memory overhead, low network utilization, and determines
+   unicast routes to destinations within the ad hoc network.  It uses
+   destination sequence numbers to ensure loop freedom at all times
+   (even in the face of anomalous delivery of routing control messages),
+   avoiding problems (such as ``counting to infinity'') associated with
+   classical distance vector protocols.
+
+
+
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002         [Page i]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+
+
+                                Contents
+
+
+Status of This Memo                                                    i
+
+Abstract                                                               i
+
+ 1. Introduction                                                       1
+
+ 2. Overview                                                           1
+
+ 3. AODV Terminology                                                   3
+
+ 4. Message Formats                                                    4
+     4.1. Route Request (RREQ) Message Format . . . . . . . . . . .    4
+     4.2. Route Reply (RREP) Message Format . . . . . . . . . . . .    5
+     4.3. Route Error (RERR) Message Format . . . . . . . . . . . .    7
+
+ 5. Route Reply Acknowledgment (RREP-ACK) Message Format               8
+
+ 6. AODV Operation                                                     8
+     6.1. Maintaining Sequence Numbers  . . . . . . . . . . . . . .    8
+     6.2. Maintaining Route Table Entries and Precursor Lists . . .   10
+     6.3. Generating Route Requests . . . . . . . . . . . . . . . .   10
+     6.4. Controlling Dissemination of Route Request Messages . . .   11
+     6.5. Processing and Forwarding Route Requests  . . . . . . . .   12
+     6.6. Generating Route Replies  . . . . . . . . . . . . . . . .   14
+           6.6.1. Route Reply Generation by the Destination . . . .   14
+           6.6.2. Route Reply Generation by an Intermediate Node  .   14
+           6.6.3. Generating Gratuitous RREPs . . . . . . . . . . .   15
+     6.7. Receiving and Forwarding Route Replies  . . . . . . . . .   16
+     6.8. Operation over Unidirectional Links . . . . . . . . . . .   17
+     6.9. Hello Messages  . . . . . . . . . . . . . . . . . . . . .   17
+    6.10. Maintaining Local Connectivity  . . . . . . . . . . . . .   18
+    6.11.  Route Error Messages, Route Expiry and Route Deletion  .   19
+    6.12. Local Repair  . . . . . . . . . . . . . . . . . . . . . .   20
+    6.13. Actions After Reboot  . . . . . . . . . . . . . . . . . .   22
+    6.14. Interfaces  . . . . . . . . . . . . . . . . . . . . . . .   22
+
+ 7. AODV and Aggregated Networks                                      23
+
+ 8. Using AODV with Other Networks                                    23
+
+ 9. Extensions                                                        24
+     9.1. Hello Interval Extension Format . . . . . . . . . . . . .   24
+     9.2. Timestamp Extension Format  . . . . . . . . . . . . . . .   25
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page ii]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+10. Configuration Parameters                                          25
+
+11. Security Considerations                                           27
+
+12. Acknowledgments                                                   28
+
+ A. Draft Modifications                                               29
+
+
+1. Introduction
+
+   The Ad hoc On-Demand Distance Vector (AODV) algorithm enables
+   dynamic, self-starting, multihop routing between participating mobile
+   nodes wishing to establish and maintain an ad hoc network.  AODV
+   allows mobile nodes to obtain routes quickly for new destinations,
+   and does not require nodes to maintain routes to destinations that
+   are not in active communication.  AODV allows mobile nodes to respond
+   to link breakages and changes in network topology in a timely manner.
+   The operation of AODV is loop-free, and by avoiding the Bellman-Ford
+   ``counting to infinity'' problem offers quick convergence when the
+   ad hoc network topology changes (typically, when a node moves in the
+   network).  When links break, AODV causes the affected set of nodes to
+   be notified so that they are able to invalidate the routes using the
+   broken link.
+
+   One distinguishing feature of AODV is its use of a destination
+   sequence number for each route entry.  The destination sequence
+   number is created by the destination for any route information it
+   sends to requesting nodes.  Using destination sequence numbers
+   ensures loop freedom and is simple to program.  Given the choice
+   between two routes to a destination, a requesting node always selects
+   the one with the greatest sequence number.
+
+
+2. Overview
+
+   Route Requests (RREQs), Route Replies (RREPs), and Route Errors
+   (RERRs) are the message types defined by AODV. These message
+   types are received at port 654, over UDP, and normal IP header
+   processing applies.  So, for instance, the requesting node is
+   expected to use its IP address as the Originator IP address for the
+   messages.  For broadcast messages, the IP limited broadcast address
+   (255.255.255.255) is used.  This means that such messages are not
+   blindly forwarded.  However, AODV operation does require certain
+   messages (e.g., RREQ) to be disseminated widely, perhaps throughout
+   the ad hoc network.  The range of dissemination of such RREQs is
+   indicated by the TTL in the IP header.  Fragmentation is typically
+   not required.
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002         [Page 1]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   As long as the endpoints of a communication connection have valid
+   routes to each other, AODV does not play any role.  When a route to a
+   new destination is needed, the node broadcasts a RREQ to find a route
+   to the destination.  A route can be determined when the RREQ reaches
+   either the destination itself, or an intermediate node with a 'fresh
+   enough' route to the destination.  A 'fresh enough' route is an
+   unexpired route entry for the destination whose associated sequence
+   number is at least as great as that contained in the RREQ. The route
+   is made available by unicasting a RREP back to the origination of
+   the RREQ. Each node receiving the request caches a route back to the
+   originator of the request, so that the RREP can be unicast from the
+   destination along a path to that originator, or likewise from any
+   intermediate node that is able to satisfy the request.
+
+   Nodes monitor the link status of next hops in active routes.  When a
+   link break in an active route is detected, a RERR message is used to
+   notify other nodes that the loss of that link has occurred.  The RERR
+   message indicates those destinations which are now unreachable due to
+   the loss of the link.  In order to enable this reporting mechanism,
+   each node keeps a ``precursor list'', containing the IP address for
+   each its neighbors that are likely to use it as a next hop towards
+   the destination that is now unreachable.  The information in the
+   precursor lists is most easily acquired during the processing for
+   generation of a RREP message, which by definition has to be sent to a
+   node in a precursor list (see section 6.6).
+
+   A RREQ may also be received for a multicast IP address.  In this
+   document, full processing for such messages is not specified.  For
+   example, the originator of such a RREQ for a multicast IP address
+   may have to follow special rules.  However, it is important to
+   enable correct multicast operation by intermediate nodes that are
+   not enabled as originating or destination nodes for IP multicast
+   addresses, and likewise are not equipped for any special multicast
+   protocol processing.  For such multicast-unaware nodes, processing
+   for a multicast IP address as a destination IP address MUST be
+   carried out in the same way as for any other destination IP address.
+
+   AODV is a routing protocol, and it deals with route table
+   management.  Route table information must be kept even
+   for ephemeral routes, such as are created to temporarily
+   store reverse paths towards nodes originating RREQs.  AODV
+
+
+
+
+
+
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002         [Page 2]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   uses the following fields with each route table entry:
+
+       -  Destination IP Address
+       -  Destination Sequence Number
+       -  Interface
+       -  Hop Count (number of hops needed to reach destination)
+       -  Last Hop Count (described in subsections 6.4 and 6.11)
+       -  Next Hop
+       -  List of Precursors (described in Section 6.2)
+       -  Lifetime (expiration or deletion time of the route)
+       -  Routing Flags
+
+   Managing the sequence number is crucial to avoiding routing loops,
+   even when links break and a node is no longer reachable to supply
+   its own information about its sequence number.  A destination
+   becomes unreachable when a link breaks or is deactivated.  When these
+   conditions occur, the route is invalidated by operations involving
+   the sequence number and metric (hop count).  See section 6.1 for
+   details.
+
+
+3. AODV Terminology
+
+   This protocol specification uses conventional meanings [2] for
+   capitalized words such as MUST, SHOULD, etc., to indicate requirement
+   levels for various protocol features.  This section defines other
+   terminology used with AODV that is not already defined in [3].
+
+      active route
+
+         A routing table entry with a finite metric in the Hop Count
+         field.  A routing table may contain entries that are not active
+         (invalid routes or entries).  They have an infinite metric
+         in the Hop Count field.  Only active entries can be used to
+         forward data packets.  Invalid entries are eventually deleted.
+
+      broadcast
+
+         Broadcasting means transmitting to the IP Limited Broadcast
+         address, 255.255.255.255.  A broadcast packet may not be
+         blindly forwarded, but broadcasting is useful to enable
+         dissemination of AODV messages throughout the ad hoc network.
+
+      forwarding node
+
+         A node that agrees to forward packets destined for another
+         node, by retransmitting them to a next hop that is closer to
+         the unicast destination along a path that has been set up using
+         routing control messages.
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002         [Page 3]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+      forward route
+
+         A route set up to send data packets from a node originating a
+         Route Discovery operation towards its desired destination.
+
+      originating node
+
+         A node that initiates an AODV message to be processed and
+         possibly retransmitted by other nodes in the ad hoc network.
+         For instance, the node initiating a Route Discovery process and
+         broadcasting the RREQ message is called the originating node of
+         the RREQ message.
+
+      reverse route
+
+         A route set up to forward a reply (RREP) packet back to the
+         originator from the destination or from an intermediate node
+         having a route to the destination.
+
+
+4. Message Formats
+
+4.1. Route Request (RREQ) Message Format
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Type      |J|R|G|       Reserved          |   Hop Count   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                            RREQ ID                            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                    Destination IP Address                     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                  Destination Sequence Number                  |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                    Originator IP Address                     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                  Originator Sequence Number                  |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   The format of the Route Request message is illustrated above, and
+   contains the following fields:
+
+      Type           1
+
+      J              Join flag; reserved for multicast.
+
+      R              Repair flag; reserved for multicast.
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002         [Page 4]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+      G              Gratuitous RREP flag; indicates whether a
+                     gratuitous RREP should be unicast to the node
+                     specified in the Destination IP Address field (see
+                     sections 6.3, 6.6.3)
+
+      Reserved       Sent as 0; ignored on reception.
+
+      Hop Count      The number of hops from the Originator IP Address
+                     to the node handling the request.
+
+      RREQ ID        A sequence number uniquely identifying the
+                     particular RREQ when taken in conjunction with the
+                     originating node's IP address.
+
+      Destination IP Address
+                     The IP address of the destination for which a route
+                     is desired.
+
+      Destination Sequence Number
+                     The greatest sequence number received in the
+                     past by the originator for any route towards the
+                     destination.
+
+      Originator IP Address
+                     The IP address of the node which originated the
+                     Route Request.
+
+      Originator Sequence Number
+                     The current sequence number to be used for
+                     route entries pointing to (and generated by) the
+                     originator of the route request.
+
+
+4.2. Route Reply (RREP) Message Format
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Type      |R|A|    Reserved     |Prefix Sz|   Hop Count   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                     Destination IP address                    |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                  Destination Sequence Number                  |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                    Originator IP address                     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                           Lifetime                            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002         [Page 5]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   The format of the Route Reply message is illustrated above, and
+   contains the following fields:
+
+      Type          2
+
+      R             Repair flag; used for multicast.
+
+      A             Acknowledgment required; see sections 5 and 6.7.
+
+      Reserved      Sent as 0; ignored on reception.
+
+      Prefix Size   If nonzero, the 5-bit Prefix Size specifies that the
+                    indicated next hop may be used for any nodes with
+                    the same routing prefix (as defined by the Prefix
+                    Size) as the requested destination.
+
+      Hop Count     The number of hops from the Originator IP Address
+                    to the Destination IP Address.  For multicast route
+                    requests this indicates the number of hops to the
+                    multicast tree member sending the RREP.
+
+      Destination IP Address
+                    The IP address of the destination for which a route
+                    is supplied.
+
+      Destination Sequence Number
+                    The destination sequence number associated to the
+                    route.
+
+      Originator IP Address
+                    The IP address of the node which originated the RREQ
+                    for which the route is supplied.
+
+      Lifetime      The time for which nodes receiving the RREP consider
+                    the route to be valid.
+
+   Note that the Prefix Size allows a Subnet Leader to supply a route
+   for every host in the subnet defined by the routing prefix, which
+   is determined by the IP address of the Subnet Leader and the Prefix
+   Size.  In order to make use of this feature, the Subnet Leader has to
+   guarantee reachability to all the hosts sharing the indicated subnet
+   prefix.  The Subnet Leader is also responsible for maintaining the
+   Destination Sequence Number for the whole subnet.  See section 7 for
+   details.
+
+
+
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002         [Page 6]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+4.3. Route Error (RERR) Message Format
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Type      |N|          Reserved           |   DestCount   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |            Unreachable Destination IP Address (1)             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |         Unreachable Destination Sequence Number (1)           |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+   |  Additional Unreachable Destination IP Addresses (if needed)  |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |Additional Unreachable Destination Sequence Numbers (if needed)|
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+   The format of the Route Error message is illustrated above, and
+   contains the following fields:
+
+      Type        3
+
+      N           No delete flag; set when a node has performed a local
+                  repair of a link, and upstream nodes should not delete
+                  the route.
+
+      Reserved    Sent as 0; ignored on reception.
+
+      DestCount   The number of unreachable destinations included in the
+                  message; MUST be at least 1.
+
+      Unreachable Destination IP Address
+                  The IP address of the destination that has become
+                  unreachable due to a link break.
+
+      Unreachable Destination Sequence Number
+                  The sequence number in the route table entry for
+                  the destination listed in the previous Unreachable
+                  Destination IP Address field.
+
+   The RERR message is sent whenever a link break causes one or more
+   destinations to become unreachable from some of the node's neighbors.
+   See section 6.2 for information about how to maintain the appropriate
+   records for this determination, and section 6.11 for specification
+   about how to create the list of destinations.
+
+
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002         [Page 7]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+5. Route Reply Acknowledgment (RREP-ACK) Message Format
+
+    0                   1
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Type      |   Reserved    |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+      Type        4
+
+      Reserved    Sent as 0; ignored on reception.
+
+   The RREP-ACK message may be used to acknowledge receipt of a RREP
+   message.  It is used in cases where the link over which the RREP
+   message is sent may be unreliable or unidirectional.
+
+
+6. AODV Operation
+
+   This section describes the scenarios under which nodes generate Route
+   Request (RREQ), Route Reply (RREP) and Route Error (RERR) messages
+   for unicast communication towards a destination, and how the message
+   data are handled.  In order to process the messages correctly,
+   certain state information has to be maintained in the route table
+   entries for the destinations of interest.
+
+   All AODV messages are sent to port 654 using UDP.
+
+
+6.1. Maintaining Sequence Numbers
+
+   AODV depends on each node in the network to own and maintain a
+   sequence number to guarantee the loop-freedom of all routes towards
+   that node.  A node increments its own sequence number in two
+   circumstances:
+
+    -  Immediately before a node originates a route discovery, it MUST
+       increment its own sequence number.  This prevents problems with
+       deleted reverse routes to the originator of a RREQ.
+    -  Immediately before a destination node originates a RREP in
+       response to a RREQ, it MUST update its own sequence number to
+       the maximum of its current sequence number and the destination
+       sequence number in the RREQ packet.
+
+   When the destination increments its sequence number, it MUST do so by
+   treating the sequence number value as if it were an unsigned number.
+   Thus, if the sequence number has already been assigned to be the
+   largest possible number representable as a 32-bit unsigned integer
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002         [Page 8]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   (i.e., 4294967295), then when it is incremented it will then have a
+   value of zero (0).  Similarly, if the sequence number currently has
+   the value 2147483647, which is the largest possible positive integer
+   when if 2's complement arithmetic is in use, the next value will be
+   2147483648, which is the most negative possible integer in the same
+   numbering system.  The representation of negative numbers is not
+   relevant to the incrementation of AODV sequence numbers.  This is
+   in contrast to the manner in which the result of comparing two AODV
+   sequence numbers is to be treated (see below).
+
+   Every route table entry at every node MUST include the latest
+   information available about the sequence number for the IP address of
+   the destination node for which the route table entry is maintained.
+   This sequence number is called the "destination sequence number".  It
+   is updated whenever a node receives new (i.e., not stale) information
+   about the sequence number from RREQ, RREP, or RERR messages that may
+   be received related to that destination.  In order to ascertain that
+   information about a destination is not stale, the node compares its
+   current numerical value for the sequence number with that obtained
+   from the incoming AODV message.  This comparison MUST be done using
+   signed 32-bit arithmetic.  If the result of subtracting the currently
+   stored sequence number from the value of the incoming sequence number
+   is less than zero, then the information related to that destination
+   in the AODV message MUST be discarded, since that information is
+   stale compared to the node's currently stored information.
+
+   The only other circumstance in which a node may change the
+   destination sequence number in one of its route table entries is in
+   response to a broken or expired link to the next hop towards that
+   destination.  The node determines which destinations use a broken
+   next hop by consulting its routing table.  In this case, for each
+   destination that uses the next hop, the node increments the sequence
+   number and puts the Hop Count to be "infinity" (for the case of
+   broken links, see also see sections 6.11, 6.12).
+
+   A node may change the sequence number in the routing table entry of a
+   destination only if:
+
+    -  it is itself the destination node, and offers a new route to
+       itself, or
+
+    -  it receives an AODV message with new information about the
+       sequence number for a destination node, or
+
+    -  the path towards the destination node expires or breaks.
+
+
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002         [Page 9]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+6.2. Maintaining Route Table Entries and Precursor Lists
+
+   For each valid route maintained by a node (containing a finite Hop
+   Count metric) as a routing table entry, the node also maintains a
+   list of precursors that may be forwarding packets on this route.
+   These precursors will receive notifications from the node in the
+   event of detection of the loss of the next hop link.  The list of
+   precursors in a routing table entry contains those neighboring nodes
+   to which a route reply was generated or forwarded.
+
+   When a node receives an AODV control packet from a neighbor, it
+   checks its route table for an entry for that neighbor.  In the event
+   that there is no corresponding entry for that neighbor, an entry
+   is created.  The sequence number is either determined from the
+   information contained in the control packet (i.e., the neighbor is
+   the originator of a RREQ), or else it is initialized to zero if the
+   sequence number for that node can not be determined.  The Lifetime
+   field of the routing table entry is either determined from the
+   control packet (i.e., the neighbor is the originator of a RREP for
+   itself), or it is initialized to ALLOWED_HELLO_LOSS * HELLO_INTERVAL.
+   In other words, the reception of a control packet has the same
+   meaning as the reception of an explicit Hello message, in that it
+   signifies an active connection to that neighbor.  The hop count to
+   the neighbor is set to one.
+
+   Each time a route is used to forward a data packet, its Active Route
+   Lifetime field of both the destination and the next hop on the path
+   to the destination is updated to be no less than the current time
+   plus ACTIVE_ROUTE_TIMEOUT. Since the route between each originator
+   and destination pair are expected to be symmetric, the Active Route
+   Lifetime for the previous hop, along the reverse path back to the
+   IP source, is also updated to be no less than the current time plus
+   ACTIVE_ROUTE_TIMEOUT.
+
+
+6.3. Generating Route Requests
+
+   A node broadcasts a RREQ when it determines that it needs a route
+   to a destination and does not have one available.  This can happen
+   if the destination is previously unknown to the node, or if a
+   previously valid route to the destination expires or is broken
+   (i.e., an infinite metric is associated with the route).  The
+   Destination Sequence Number field in the RREQ message is the last
+   known destination sequence number for this destination and is copied
+   from the Destination Sequence Number field in the routing table.  If
+   no sequence number is known, a sequence number of zero is used.  The
+   Originator Sequence Number in the RREQ message is the node's own
+   sequence number.  The RREQ ID field is incremented by one from the
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 10]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   last RREQ ID used by the current node.  Each node maintains only one
+   RREQ ID. The Hop Count field is set to zero.
+
+   Before broadcasting the RREQ, the originating node buffers the RREQ
+   ID and the Originator IP address (its own address) of the RREQ
+   for PATH_TRAVERSAL_TIME milliseconds.  In this way, when the node
+   receives the packet again from its neighbors, it will not reprocess
+   and re-forward the packet.
+
+   An originating node often expects to have bidirectional
+   communications with a destination node.  In such cases, it is
+   not sufficient for the originating node to have a route to the
+   destination node; the destination must also have a route back to
+   the originating node.  In order for this to happen as efficiently
+   as possible, any generation of a RREP by an intermediate node (as
+   in section 6.6) for delivery to the originating node SHOULD be
+   accompanied by some action that notifies the destination about a
+   route back to the originating node.  The originating node selects
+   this mode of operation in the intermediate nodes by setting the `G'
+   flag.  See section 6.6.3 for details about actions taken by the
+   intermediate node in response to a RREQ with the `G' flag set.
+
+   After broadcasting a RREQ, a node waits for a RREP. If the RREP is
+   not received within NET_TRAVERSAL_TIME milliseconds, the node MAY try
+   again to discover a route by broadcasting a RREQ, up to a maximum
+   of RREQ_RETRIES times.  Each new attempt MUST increment the RREQ ID
+   field.
+
+   Data packets waiting for a route (i.e., waiting for a RREP after a
+   RREQ has been sent) SHOULD be buffered.  The buffering SHOULD be
+   "first-in, first-out" (FIFO). If a route discovery has been attempted
+   RREQ_RETRIES times without receiving any RREP, all data packets
+   destined for the corresponding destination SHOULD be dropped from
+   the buffer and a Destination Unreachable message delivered to the
+   application.
+
+
+6.4. Controlling Dissemination of Route Request Messages
+
+   To prevent unnecessary network-wide dissemination of RREQs, the
+   originating node SHOULD use an expanding ring search technique as
+   an optimization.  In an expanding ring search, the originating
+   node initially uses a TTL = TTL_START in the RREQ packet IP
+   header and sets the timeout for receiving a RREP to 2 * TTL *
+   NODE_TRAVERSAL_TIME milliseconds.  If the RREQ times out without a
+   corresponding RREP, the originator broadcasts the RREQ again with the
+   TTL incremented by TTL_INCREMENT. This continues until the TTL set
+   in the RREQ reaches TTL_THRESHOLD, beyond which a TTL = NET_DIAMETER
+   is used for each attempt.  Each time, the timeout for receiving a
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 11]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   RREP is calculated as before.  Each attempt increments the RREQ ID
+   field in the RREQ packet.  The RREQ can be broadcast with TTL =
+   NET_DIAMETER up to a maximum of RREQ_RETRIES times.
+
+   When a RREP is received, the Hop Count indicated in the RREP packet
+   is stored as the Last Hop Count in the routing table.  When a new
+   route to the same destination is required at a later time (e.g., upon
+   route loss), the TTL in the RREQ IP header is initially set to this
+   Last Hop Count plus TTL_INCREMENT. Thereafter, following each timeout
+   the TTL is incremented by TTL_INCREMENT until TTL = TTL_THRESHOLD is
+   reached.  Beyond this TTL = NET_DIAMETER is used as before.
+
+   Timeouts MAY be more accurately determined dynamically via
+   measurement, instead of using a statically configured value related
+   to NODE_TRAVERSAL_TIME. To accomplish this, the RREQ may carry the
+   timestamp via an extension field as defined in Section 9.2 to be
+   carried back by the RREP packet (again via an extension field).  The
+   difference between the current time and this timestamp determines the
+   route discovery latency.  The timeout may be set to be a small factor
+   times the average of the last few route discovery latencies for the
+   concerned destination.  These latencies may be recorded as additional
+   fields in the routing table.
+
+   An expired routing table entry SHOULD NOT be expunged before
+   (current_time + DELETE_PERIOD) (see section 6.11).  Otherwise, the
+   soft state corresponding to the route (e.g., Last Hop Count) will be
+   lost.  Furthermore, a longer routing table entry expunge time MAY be
+   configured.  Any routing table entry waiting for a RREP SHOULD NOT be
+   expunged before (current_time + PATH_TRAVERSAL_TIME).
+
+
+6.5. Processing and Forwarding Route Requests
+
+   When a node receives a RREQ, it first checks to determine whether it
+   has received a RREQ with the same Originator IP Address and RREQ ID
+   within at least the last PATH_TRAVERSAL_TIME milliseconds.  If such a
+   RREQ has been received, the node silently discards the newly received
+   RREQ. The rest of this subsection describes actions taken for RREQs
+   that are not discarded.
+
+   The node always creates a reverse route to the Originator IP Address
+   in its routing table if one does not already exist.  If a route to
+   the Originator IP Address already exists, it is updated only if
+   either
+
+      (i)       the Originator Sequence Number in the RREQ is higher
+                than the destination sequence number of the Originator
+                IP Address in the route table, or
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 12]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+      (ii)      the sequence numbers are equal, but the hop count as
+                specified by the RREQ, plus one, is now smaller than the
+                existing hop count in the routing table.
+
+   This reverse route will be needed if the node receives a RREP back
+   to the node that originated the RREQ (identified by the Originator
+   IP Address).  When the reverse route is created or updated, the
+   following actions are carried out:
+
+    1. the Originator Sequence Number from the RREQ is copied to the
+       corresponding destination sequence number in the route table
+       entry;
+
+    2. the next hop in the routing table becomes the node from which the
+       RREQ was received (it is obtained from the source IP address in
+       the IP header and is often not equal to the Originator IP Address
+       field in the RREQ message);
+
+    3. the hop count is copied from the Hop Count in the RREQ message
+       and incremented by one;
+
+   Whenever a RREQ message is received, the Lifetime of the reverse
+   route entry for the Originator IP address is set to be the maximum of
+   (ExistingLifetime, MinimalLifetime), where
+
+      MinimalLifetime =    (current time + PATH_TRAVERSAL_TIME -
+                           2*HopCount*NODE_TRAVERSAL_TIME).
+
+   The node generates a RREP (as discussed further in section 6.6) if
+   either:
+
+      (i)       it is itself the destination (see section 6.6.1), or
+
+      (ii)      it has an active route to the destination, and the
+                destination sequence number in the node's existing
+                route table entry for the destination is greater than
+                or equal to the Destination Sequence Number of the
+                RREQ (comparison using signed 32-bit arithmetic).  See
+                section 6.6.2 for further information about generating
+                the RREP in this case.
+
+   When either of these conditions is satisfied, the node does not
+   rebroadcast the RREQ.
+
+   Otherwise, if the incoming IP header has TTL larger than 1, the node
+   updates and broadcasts the RREQ to address 255.255.255.255 on all of
+   its configured interface(s) (see section 6.14).  To update the RREQ,
+   the TTL or hop limit field in the outgoing IP header is decreased by
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 13]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   one, and the Hop Count field in the RREQ message is incremented by
+   one, to account for the new hop through the intermediate node.
+
+
+6.6. Generating Route Replies
+
+   If a node receives a route request for a destination, and either
+   has a fresh enough route to satisfy the request or is itself the
+   destination, the node generates a RREP message.  This node copies
+   the Destination IP Address and the Originator Sequence Number in
+   RREQ message into the corresponding fields in the RREP message.
+   Processing is slightly different, depending on whether the node is
+   itself the requested destination, or instead if it is an intermediate
+   node with an admissible route to the destination.  These scenarios
+   are described in the sections below.
+
+   Once created, the RREP is unicast to the next hop toward the
+   originator of the RREQ, as indicated by the route table entry for
+   that originator.  As the RREP is forwarded back towards the node
+   which originated the RREQ message, the Hop Count field is incremented
+   by one at each hop.  Thus, when the RREP reaches the originator, the
+   Hop Count represents the distance, in hops, of the destination from
+   the originator.
+
+
+6.6.1. Route Reply Generation by the Destination
+
+   If the generating node is the destination itself, it MUST update its
+   own sequence number to the maximum of its current sequence number and
+   the destination sequence number in the RREQ packet.  The destination
+   node places its sequence number into the Destination Sequence Number
+   field of the RREP, and enters the value zero in the Hop Count field
+   of the RREP.
+
+   The destination node copies the value MY_ROUTE_TIMEOUT (see
+   section 10) into the Lifetime field of the RREP. Each node MAY
+   reconfigure its value for MY_ROUTE_TIMEOUT, within mild constraints
+   (see section 10).
+
+
+6.6.2. Route Reply Generation by an Intermediate Node
+
+   If the node generating the RREP is not the destination node, but
+   instead is an intermediate hop along the path from the originator to
+   the destination, it copies its last known sequence number for the
+   destination into the Destination Sequence Number field in the RREP
+   message.
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 14]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   The intermediate node updates the forward path route entry by placing
+   the last hop node (from which it received the RREQ, as indicated by
+   the source IP address field in the IP header) into the precursor
+   list for the forward path route entry -- i.e., the entry for the
+   Destination IP Address.  The intermediate node also updates its route
+   table entry for the node originating the RREQ by placing the next hop
+   towards the destination in the precursor list for the reverse route
+   entry -- i.e., the entry for the Originator IP Address field of the
+   RREQ message data.
+
+   The intermediate node places its distance in hops from the
+   destination (indicated by the hop count in the routing table) in
+   the Hop Count field in the RREP. The Lifetime field of the RREP is
+   calculated by subtracting the current time from the expiration time
+   in its route table entry.
+
+
+6.6.3. Generating Gratuitous RREPs
+
+   After a node receives a RREQ and responds with a RREP, it discards
+   the RREQ. If intermediate nodes reply to every transmission of a
+   given RREQ, the destination does not receive any copies of it.  In
+   this situation, it does not learn of a route to the originating node.
+   This could cause the destination to initiate a network-wide route
+   discovery (for example, if the originator is attempting to establish
+   a TCP session).  In order that the destination learn of routes to the
+   originating node, the originating node SHOULD set the ``gratuitous
+   RREP'' ('G') flag in the RREQ if for any reason the destination is
+   likely to need a route to the originating node.  If, in response to a
+   RREQ with the 'G' flag set, an intermediate node returns a RREP, it
+   MUST also unicast a gratuitous RREP to the destination node.
+
+   The RREP that is sent to the originator of the RREQ is the same
+   as before.  The gratuitous RREP that is to be sent to the desired
+   destination contains the following values in the RREP message fields:
+
+      Hop Count  The Hop Count as indicated in the node's route table
+                 entry for the originator
+
+      Destination IP Address
+                 The IP address of the node that originated the RREQ
+
+      Destination Sequence Number
+                 The Originator Sequence Number from the RREQ
+
+      Originator IP Address
+                 The IP address of the Destination node in the RREQ
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 15]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+      Lifetime   The remaining lifetime of the route towards the
+                 originator of the RREQ, as known by the intermediate
+                 node.
+
+   The gratuitous RREP is then sent to the next hop along the path to
+   the destination node, just as if the destination node had already
+   issued a RREQ for the originating node and this RREP was produced in
+   response to that (fictitious) RREQ.
+
+
+6.7. Receiving and Forwarding Route Replies
+
+   When a node receives a RREP message, it compares the Destination
+   Sequence Number in the message with its own copy of destination
+   sequence number for the Destination IP Address in the RREP message.
+   The forward route for this destination is created if it does not
+   already exist, or it is updated only if (i) the Destination Sequence
+   Number in the RREP is greater than the node's copy of the destination
+   sequence number, or (ii) the sequence numbers are the same, but the
+   route is no longer active, or (iii) the sequence numbers are the
+   same, and the Hop Count in the RREP is smaller than the hop count
+   in route table entry.  In either of these cases, the next hop in
+   the route entry is assigned to be the node from which the RREP is
+   received, which is indicated by the source IP address field in the
+   IP header; the hop count is the Hop Count in the RREP message plus
+   one; the expiry time is the current time plus the Lifetime in the
+   RREP message; and the destination sequence number is the Destination
+   Sequence Number in the RREP message.  The current node can now begin
+   using this route to forward data packets to the destination.
+
+   If the current node is not the node indicated by the Originator IP
+   Address in the RREP message AND a forward route has been created or
+   updated as described above, the node consults its route table entry
+   for the originating node to determine the next hop for the RREP
+   packet, and then forwards the RREP towards the originator using the
+   information in the route table entry.
+
+   When any node transmits a RREP, the precursor list for the
+   corresponding destination node is updated by adding to it the
+   next hop node to which the RREP is forwarded.  Also, at each
+   node the (reverse) route used to forward a RREP has its lifetime
+   changed to be the maximum of (existing-lifetime, (current time +
+   ACTIVE_ROUTE_TIMEOUT)).
+
+   If a node forwards a RREP over a link that is likely to have errors
+   or be unidirectional, the node SHOULD set the `A' flag to require
+   that the recipient of the RREP acknowledge receipt of the RREP by
+   sending a RREP-ACK message back (see section 6.8).
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 16]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+6.8. Operation over Unidirectional Links
+
+   It is possible that a RREP transmission may fail, especially if the
+   RREQ transmission triggering the RREP occurs over a unidirectional
+   link.  If no other RREP generated from the same route discovery
+   attempt reaches the node which originated the RREQ message, the
+   originator will reattempt network-wide route discovery after a
+   timeout (see section 6.3).  However, the same scenario might well
+   be repeated, and no route would be discovered even after repeated
+   retries.  Unless corrective action is taken, this can happen even
+   when bidirectional routes between originator and destination do
+   exist.  Link layers using broadcast transmissions for the RREQ will
+   not be able to detect the presence of such unidirectional links.  In
+   AODV, any node acts on only the first RREQ with the same RREQ ID
+   and ignores any subsequent RREQs.  Suppose, for example, that the
+   first RREQ arrives along a path that has one or more unidirectional
+   link(s).  A subsequent RREQ may arrive via a bidirectional path
+   (assuming such paths exist), but it will be ignored.
+
+   To prevent this problem, when a node detects that its transmission of
+   a RREP message has failed, it remembers the next-hop of the failed
+   RREP in a ``blacklist'' set.  Such failures can be detected via
+   the absence of a link-layer or network-layer acknowledgment (e.g.,
+   RREP-ACK). A node ignores all RREQs received from any node in its
+   blacklist set.  Nodes are removed from the blacklist set after a
+   BLACKLIST_TIMEOUT period (see section 10).  This period should be set
+   to the upper bound of the time it takes to perform the allowed number
+   of route request retry attempts as described in section 6.3.
+
+
+6.9. Hello Messages
+
+   A node MAY offer connectivity information by broadcasting local
+   Hello messages as follows.  Every HELLO_INTERVAL milliseconds, the
+   node checks whether it has sent a broadcast (e.g., a RREQ or an
+   appropriate layer 2 message) within the last HELLO_INTERVAL. If
+   it has not, it MAY broadcast a RREP with TTL = 1, called a Hello
+   message, with the RREP message fields set as follows:
+
+      Destination IP Address
+                  The node's IP address.
+
+      Destination Sequence Number
+                  The node's latest sequence number.
+
+      Hop Count   0
+
+      Lifetime    ALLOWED_HELLO_LOSS * HELLO_INTERVAL
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 17]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   A node MAY determine connectivity by listening for packets from its
+   set of neighbors.  If, within the past DELETE_PERIOD, it has received
+   a Hello message from a neighbor, and then for that neighbor does
+   not receive any packets (Hello messages or otherwise) for more than
+   ALLOWED_HELLO_LOSS * HELLO_INTERVAL milliseconds, the node SHOULD
+   assume that the link to this neighbor is currently broken.  When this
+   happens, the node SHOULD proceed as in Section 6.11.
+
+   Whenever a node receives a Hello message from a neighbor, the
+   node SHOULD make sure that it has an active route to the neighbor,
+   and create one if necessary.  If a route already exists, then the
+   Lifetime for the route should be increased, if necessary, to be at
+   least ALLOWED_HELLO_LOSS * HELLO_INTERVAL. The route to the neighbor,
+   if it exists, MUST subsequently contain the latest Destination
+   Sequence Number from the Hello message.  Routes that are newly
+   created from the reception of Hello messages might have empty
+   precursor lists, and in that case would not trigger RERR messages
+   when the neighbor moves away and the neighbor route expires.
+
+
+6.10. Maintaining Local Connectivity
+
+   Each forwarding node SHOULD keep track of its continued connectivity
+   to its active next hops (i.e., which next hops or precursors have
+   forwarded packets to or from the forwarding node during the last
+   ACTIVE_ROUTE_TIMEOUT), as well as neighbors that have transmitted
+   Hello messages during the last (ALLOWED_HELLO_LOSS * HELLO_INTERVAL).
+   A node can maintain accurate information about its continued
+   connectivity to these active next hops, using one or more of the
+   available link or network layer mechanisms, as described below.
+
+    -  Any suitable link layer notification, such as those provided by
+       IEEE 802.11, can be used to determine connectivity, each time
+       a packet is transmitted to an active next hop.  For example,
+       absence of a link layer ACK or failure to get a CTS after sending
+       RTS, even after the maximum number of retransmission attempts,
+       indicates loss of the link to this active next hop.
+
+    -  If possible, passive acknowledgment SHOULD be used when the
+       next hop is expected to forward the packet, by listening to the
+       channel for a transmission attempt made by the next hop.  If
+       transmission is not detected within NEXT_HOP_WAIT milliseconds or
+       the next hop is the destination (and thus is never supposed to
+       transmit the packet) one of the following methods should be used
+       to determine connectivity.
+
+        *  Receiving any packet (including a Hello message) from the
+           next hop.
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 18]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+        *  A RREQ unicast to the next hop, asking for a route to the
+           next hop.
+
+        *  An ICMP Echo Request message unicast to the next hop.
+
+   If a link to the next hop cannot be detected by any of these methods,
+   the forwarding node SHOULD assume that the link is broken, and take
+   corrective action by following the methods specified in Section 6.11.
+
+
+6.11.  Route Error Messages, Route Expiry and Route Deletion
+
+   A Route Error (RERR) message MAY be either broadcast (if there
+   are many precursors), unicast (if there is only 1 precursor),
+   or iteratively unicast to all precursors (if broadcast is
+   inappropriate).  Even when the RERR message is iteratively unicast to
+   several precursors, it is considered to be a single control message
+   for the purposes of the description in the text that follows.
+
+   A node initiates processing for a RERR message in three situations:
+
+      (i)       if it detects a link break for the next hop of an active
+                route in its routing table, or if the routing table
+                entry for the next hop expires (also see section 6.1),
+                or
+
+      (ii)      if it gets a data packet destined to a node for which it
+                does not have an active route, and has already made an
+                attempt at local repair (if local repair is being used),
+                or
+
+      (iii)     if it receives a RERR from a neighbor for one or more
+                active routes.
+
+   For case (i), the node first makes a list of unreachable destinations
+   consisting of the unreachable neighbor and any additional
+   destinations in the local routing table that use the unreachable
+   neighbor as the next hop.  For case (ii), there is only one
+   unreachable destination, which is the destination of the data packet
+   that cannot be delivered.  For case (iii), the list should consist of
+   those destinations in the RERR for which there exists a corresponding
+   entry in the local routing table that has the transmitter of the
+   received RERR as the next hop.
+
+   Some of the unreachable destinations in the list could be used by
+   neighboring nodes, and it may therefore be necessary to send a (new)
+   RERR. The RERR should contain those destinations that are part of
+   the created list of unreachable destinations and have a non-empty
+   precursor list.
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 19]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   The neighboring node(s) that should receive the RERR are all those
+   that belong to a precursor list of at least one of the unreachable
+   destination(s) in the newly created RERR. In case there is only one
+   unique neighbor that needs to receive the RERR, the RERR SHOULD be
+   unicast to that destination.  Otherwise the RERR is typically sent
+   to the local broadcast address (Destination IP == 255.255.255.255,
+   TTL == 1) with the unreachable destinations, and their corresponding
+   destination sequence numbers, included in the packet.  The DestCount
+   field of the RERR packet indicates the number of unreachable
+   destinations included in the packet.
+
+   Just before transmitting the RERR, certain updates are made on the
+   routing table that may affect the destination sequence numbers for
+   the unreachable destinations.  For each one of these destinations,
+   the corresponding routing table entry is updated as follows:
+
+    1. The entry is invalidated by copying the Hop Count to the Last Hop
+       Count field and then making the Hop Count infinity.
+
+    2. The destination sequence number of this routing entry, if it
+       exists, is incremented by one for cases (i) and (ii) above, and
+       copied from the incoming RERR in case (iii) above.
+
+    3. The Lifetime field is updated to current time plus DELETE_PERIOD.
+       Before this time, the entry MUST NOT be deleted.
+
+   Note that the Lifetime field in the routing table plays dual role
+   -- for an active route it is the expiry time, and for an invalid
+   route it is the deletion time.  If a data packet is received for an
+   invalid route, the Lifetime field is updated to current time plus
+   DELETE_PERIOD. The determination of DELETE_PERIOD is discussed in
+   Section 10.
+
+
+6.12. Local Repair
+
+   When a link break in an active route occurs, the node upstream of
+   that break MAY choose to repair the link locally if the destination
+   was no farther than MAX_REPAIR_TTL hops away.  To repair the link
+   break, the node increments the sequence number for the destination
+   and then broadcasts a RREQ for that destination.  The TTL of the RREQ
+   should initially be set to the following value:
+
+      max(MIN_REPAIR_TTL, 0.5 * #hops to originator) +
+      LOCAL_ADD_TTL.
+
+   Thus, local repair attempts should never be visible to the
+   originating node, and will always have TTL >= MIN_REPAIR_TTL
+   + LOCAL_ADD_TTL. The node initiating the repair then waits the
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 20]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   discovery period to receive RREPs in response to the RREQ. If, at
+   the end of the discovery period, it has not received a RREP for that
+   destination, it proceeds as described in Section 6.11 by transmitting
+   a RERR message for that destination.
+
+   On the other hand, if the node receives one or more RREPs during the
+   discovery period, it proceeds as described in Section 6.7, updating
+   its route table entry for that destination.  It then compares the hop
+   count of the new route with the value in the last hop count route
+   table entry for that destination.  If the hop count of the newly
+   determined route to the destination is greater than the hop count of
+   the previously known route, as recorded in the last hop count field,
+   the node SHOULD create a RERR message for the destination, with the
+   'N' bit set.
+
+   A node that receives a RERR message with the 'N' flag set MUST NOT
+   delete the route to that destination.  The only action taken should
+   be the retransmission of the message, if the RERR arrived from the
+   next hop along that route, and if there are one or more precursor
+   nodes for that route to the destination.  When the originating node
+   receives a RERR message with the 'N' flag set, if this message
+   came from its next hop along its route to the destination then
+   the originating node MAY choose to reinitiate route discovery, as
+   described in Section 6.3.
+
+   Local repair of link breaks in active routes sometimes results in
+   increased path lengths to those destinations.  Repairing the link
+   locally is likely to increase the number of data packets that are
+   able to be delivered to the destinations, since data packets will not
+   be dropped as the RERR travels to the originating node.  Sending a
+   RERR to the originating node after locally repairing the link break
+   may allow the originator to find a fresh route to the destination
+   that is better, based on current node positions.  However, it
+   does not require the originating node to rebuild the route, as the
+   originator may be done, or nearly done, with the data session.
+
+   When a link breaks along an active route, there are often multiple
+   destinations that become unreachable.  The node that is upstream of
+   the broken link tries an immediate local repair for only the one
+   destination towards which the data packet was traveling.  Other
+   routes using the same link MUST be marked as broken, but the node
+   handling the local repair MAY flag each such newly broken route as
+   locally repairable; this local repair flag in the route table MUST be
+   reset when the route times out (e.g., after the route has been not
+   been active for ACTIVE_ROUTE_TIMEOUT). Before the timeout occurs,
+   these other routes will be repaired as needed when packets arrive
+   for the other destinations.  Alternatively, depending upon local
+   congestion, the node MAY begin the process of establishing local
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 21]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   repairs for the other routes, without waiting for new packets to
+   arrive.
+
+
+6.13. Actions After Reboot
+
+   A node participating in the ad hoc network must take certain actions
+   after reboot as it might lose all sequence number records for all
+   destinations, including its own sequence number.  However, there
+   may be neighboring nodes that are using this node as an active next
+   hop.  This can potentially create routing loops.  To prevent this
+   possibility, each node on reboot waits for DELETE_PERIOD. During
+   this time, the node does not transmit any RREP messages.  If the
+   node receives a RREQ, RREP, or RERR control packet, it SHOULD create
+   route entries as appropriate given the sequence number information
+   in the control packets.  If the node receives a data packet for
+   some other destination, it MUST broadcast a RERR as described in
+   subsection 6.11 and reset the waiting timer to expire after current
+   time plus DELETE_PERIOD.
+
+   It can be shown [1] that by the time the rebooted node comes out of
+   the waiting phase and becomes an active router again, none of its
+   neighbors will be using it as an active next hop any more.  Its own
+   sequence number gets updated once it receives a RREQ from any other
+   node, as the RREQ always carries the maximum destination sequence
+   number seen en route.
+
+
+6.14. Interfaces
+
+   Because AODV should operate smoothly over wired, as well as wireless,
+   networks, and because it is likely that AODV will also be used with
+   multi-homed radios, the interface over which packets arrive must
+   be known to AODV whenever a packet is received.  This includes the
+   reception of RREQ, RREP, and RERR messages.  Whenever a packet is
+   received from a new neighbor, the interface on which that packet was
+   received is recorded into the route table entry for that neighbor,
+   along with all the other appropriate routing information.  Similarly,
+   whenever a route to a new destination is learned, the interface
+   through which the destination can be reached is also recorded into
+   the destination's route table entry.
+
+   When multiple interfaces are available, a node retransmitting a RREQ
+   message rebroadcasts that message on all interfaces that have been
+   configured for operation in the ad-hoc network, except those on which
+   it is known that all of the nodes neighbors have already received
+   the RREQ For instance, for some broadcast media (e.g., Ethernet) it
+   may be presumed that all nodes on the same link receive a brodacast
+   message at the same time.  When a node needs to transmit a RERR, it
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 22]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   should only transmit it on those interfaces that have precursor nodes
+   for that route.
+
+
+7. AODV and Aggregated Networks
+
+   AODV has been designed for use by mobile nodes with IP addresses
+   that are not necessarily related to each other, to create an ad hoc
+   network.  However, in some cases a collection of mobile nodes MAY
+   operate in a fixed relationship to each other and share a common
+   subnet prefix, moving together within an area where an ad hoc network
+   has formed.  Call such a collection of nodes a ``subnet''.  In this
+   case, it is possible for a single node within the subnet to advertise
+   reachability for all other nodes on the subnet, by responding with
+   a RREP message to any RREQ message requesting a route to any node
+   with the subnet routing prefix.  Call the single node the ``subnet
+   router''.  In order for a subnet router to operate the AODV protocol
+   for the whole subnet, it has to maintain a destination sequence
+   number for the entire subnet.  In any such RREP message sent by the
+   subnet router, the Prefix Size field of the RREP message MUST be
+   set to the length of the subnet prefix.  Other nodes sharing the
+   subnet prefix SHOULD NOT issue RREP messages, and SHOULD forward RREQ
+   messages to the subnet leader.
+
+
+8. Using AODV with Other Networks
+
+   In some configurations, an ad hoc network may be able to provide
+   connectivity between external routing domains that do not use AODV.
+   If the points of contact to the other networks can act as subnet
+   routers (see Section 7) for any relevant networks within the external
+   routing domains, then the ad hoc network can maintain connectivity to
+   the external routing domains.  Indeed, the external routing networks
+   can use the ad hoc network defined by AODV as a transit network.
+
+   In order to provide this feature, a point of contact to an external
+   network (call it an Infrastructure Router) has to act as the subnet
+   router for every subnet of interest within the external network for
+   which the Infrastructure Router can provide reachability.  This
+   includes the need for maintaining a destination sequence number for
+   that external subnet.
+
+   If multiple Infrastructure Routers offer reachability to the same
+   external subnet, those Infrastructure Routers have to cooperate (by
+   means outside the scope of this specification) to provide consistent
+   AODV semantics for ad hoc access to those subnets.
+
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 23]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+9. Extensions
+
+   RREQ and RREP messages have extensions defined in the following
+   format:
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Type      |    Length     |     type-specific data ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   where:
+
+      Type     1
+
+      Length   The length of the type-specific data, not including the
+               Type and Length fields of the extension.
+
+   Extensions with types between 128 and 255 may NOT be skipped.  The
+   rules for extensions will be spelled out more fully, and conform to
+   the rules for handling IPv6 options.
+
+
+9.1. Hello Interval Extension Format
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Type      |    Length     |       Hello Interval ...      |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | ... Hello Interval, continued |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+      Type     2
+
+      Length   4
+
+      Hello Interval
+               The number of milliseconds between successive
+               transmissions of a Hello message.
+
+   The Hello Interval extension MAY be appended to a RREP message with
+   TTL == 1, to be used by a neighboring receiver in determine how long
+   to wait for subsequent such RREP messages (i.e., Hello messages; see
+   section 6.9).
+
+
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 24]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+9.2. Timestamp Extension Format
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+                                   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                                   |     Type      |    Length     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                                                               |
+   +                    Timestamp in NTP Format                    +
+   |                                                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+      Type     3
+
+      Length   8
+
+      Timestamp
+               The number of seconds and fractional seconds since the
+               Timestamp Extension was added to the control message as
+               transmitted by the originator (e.g., of a RREQ message).
+
+   The Timestamp value is structured according to the format for NTP
+   timestamps specified in RFC 2030 [5].  For convenience, the following
+   text is taken from that document, but should not be used as a
+   substitute for consulting RFC 2030 for details.
+
+   NTP timestamps are represented as a 64-bit unsigned fixed-point
+   number, in seconds relative to 0h on 1 January 1900.  The integer
+   part is in the first 32 bits and the fraction part in the last 32
+   bits.  In the fraction part, the non-significant low order can be
+   set to 0.  It is advisable to fill the non-significant low order
+   bits of the timestamp with a random, unbiased bitstring, both to
+   avoid systematic roundoff errors and as a means of loop detection and
+   replay detection (see below).  One way of doing this is to generate a
+   random bitstring in a 64-bit word, then perform an arithmetic right
+   shift a number of bits equal to the number of significant bits of the
+   timestamp, then add the result to the original timestamp.
+
+
+10. Configuration Parameters
+
+   This section gives default values for some important parameters
+   associated with AODV protocol operations.  A particular mobile
+   node may wish to change certain of the parameters, in particular
+   the NET_DIAMETER, NODE_TRAVERSAL_TIME, MY_ROUTE_TIMEOUT,
+   ALLOWED_HELLO_LOSS, RREQ_RETRIES, and possibly the HELLO_INTERVAL. In
+   the latter case, the node should advertise the HELLO_INTERVAL in its
+   Hello messages, by appending a Hello Interval Extension to the RREP
+   message.  Choice of these parameters may affect the performance of
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 25]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+   the protocol.  The configured value for MY_ROUTE_TIMEOUT MUST be at
+   least 2 * REV_ROUTE_LIFE.
+
+      Parameter Name           Value
+      ----------------------   -----
+      ACTIVE_ROUTE_TIMEOUT     3,000 Milliseconds
+      ALLOWED_HELLO_LOSS       2
+      BLACKLIST_TIMEOUT        RREQ_RETRIES * NET_TRAVERSAL_TIME
+      DELETE_PERIOD            see note below
+      HELLO_INTERVAL           1,000 Milliseconds
+      LOCAL_ADD_TTL            2
+      MAX_REPAIR_TTL           0.3 * NET_DIAMETER
+      MIN_REPAIR_TTL           see note below
+      MY_ROUTE_TIMEOUT         2 * ACTIVE_ROUTE_TIMEOUT
+      NET_DIAMETER             35
+      NEXT_HOP_WAIT            NODE_TRAVERSAL_TIME + 10
+      NODE_TRAVERSAL_TIME      40
+      NET_TRAVERSAL_TIME       3 * NODE_TRAVERSAL_TIME * NET_DIAMETER / 2
+      PATH_DISCOVERY_TIME 2 * NET_TRAVERSAL_TIME2RREQ_RETRIES
+      TTL_START                1
+      TTL_INCREMENT            2
+      TTL_THRESHOLD            7
+
+
+   The MIN_REPAIR_TTL should be the last known hop count to
+   the destination.  If Hello messages are used, then the
+   ACTIVE_ROUTE_TIMEOUT parameter value MUST be more than the
+   value (ALLOWED_HELLO_LOSS * HELLO_INTERVAL).
+
+   DELETE_PERIOD should be an upper bound on the time for which an
+   upstream node A can have a neighbor B as an active next hop for
+   destination D, while B has invalidated the route to D. Beyond this
+   time B can delete the route to D. The determination of the upper
+   bound somewhat depends on the characteristics of the underlying
+   link layer.  If Hello messages are used to determine the continued
+   availability of links to next hop nodes, DELETE_PERIOD must be at
+   least ALLOWED_HELLO_LOSS * HELLO_INTERVAL. If the link layer feedback
+   is used to detect loss of link, DELETE_PERIOD must be at least
+   ACTIVE_ROUTE_TIMEOUT. If hello messages are received from a neighbor
+   but data packets to that neighbor are lost, (due to temporary link
+   asymmetry, e.g.)  we have to make more concrete assumptions about
+   the underlying link layer.  We assume that such asymmetry cannot
+   persist beyond a certain time, say, a multiple K of HELLO_INTERVAL.
+   In other words, a node will invariably receive at least one out
+   of K subsequent Hello messages from a neighbor if the link is
+   working and the neighbor is sending no other traffic.  Covering all
+   possibilities,
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 26]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+DELETE_PERIOD = K * max (ACTIVE_ROUTE_TIMEOUT, HELLO_INTERVAL) (K = 5 is
+                             recommended).
+
+   NET_DIAMETER measures the maximum possible number of hops between
+   two nodes in the network.  NODE_TRAVERSAL_TIME is a conservative
+   estimate of the average one hop traversal time for packets and should
+   include queueing delays, interrupt processing times and transfer
+   times.  ACTIVE_ROUTE_TIMEOUT SHOULD be set to a longer value (at
+   least 10,000 milliseconds) if link-layer indications are used to
+   detect link breakages such as in IEEE 802.11 [4] standard.  TTL_START
+   should be set to at least 2 if Hello messages are used for local
+   connectivity information.  Performance of the AODV protocol is
+   sensitive to the chosen values of these constants, which often depend
+   on the characteristics of the underlying link layer protocol, radio
+   technologies etc.  BLACKLIST_TIMEOUT should be suitably increased
+   if an expanding ring search is used.  In such cases, it should be
+   [(TTL_THRESHOLD - TTL_START)/TTL_INCREMENT] + 1 + RREQ_RETRIES. This
+   is to account for possible additional route discovery attempts.
+
+
+11. Security Considerations
+
+   Currently, AODV does not specify any special security measures.
+   Route protocols, however, are prime targets for impersonation
+   attacks.  If there is danger of such attacks, AODV control messages
+   must be protected by use of authentication techniques, such as those
+   involving generation of unforgeable and cryptographically strong
+   message digests or digital signatures.  In particular, RREP messages
+   SHOULD be authenticated to avoid creation of spurious routes to a
+   desired destination.  Otherwise, an attacker could masquerade as the
+   desired destination, and maliciously deny service to the destination
+   and/or maliciously inspect and consume traffic intended for delivery
+   to the destination.  RERR messages, while less dangerous, SHOULD be
+   authenticated in order to prevent malicious nodes from disrupting
+   valid routes between nodes that are communication partners.
+
+   Since AODV does not make any assumption about the nature of the
+   address assignment to the mobile nodes except that they are presumed
+   to have unique IP addresses, no definite statements can be made about
+   the applicability of IPsec authentication headers or key exchange
+   mechanisms.  However, if the mobile nodes in the ad hoc network have
+   pre-established security associations, they should be able to use the
+   same authentication mechanisms based on their IP addresses as they
+   would have used otherwise.
+
+
+
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 27]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+12. Acknowledgments
+
+   We acknowledge with gratitude the work done at University of
+   Pennsylvania within Carl Gunter's group, as well as at Stanford and
+   CMU, to determine some conditions (especially involving reboots and
+   lost RERRs) under which previous versions of AODV could suffer from
+   routing loops.  Contributors to those efforts include Karthikeyan
+   Bhargavan, Joshua Broch, Dave Maltz, Madanlal Musuvathi, and
+   Davor Obradovic.  The idea of a DELETE_PERIOD, for which expired
+   routes (and, in particular, the sequence numbers) to a particular
+   destination must be maintained, was also suggested by them.
+
+   We also acknowledge the comments and improvements suggested by
+   Sung-Ju Lee (especially regarding local repair), Mahesh Marina, Erik
+   Nordstrom (who provided text for section 6.11), Yves Prelot, Manel
+   Guerrero Zapata, Philippe Jacquet, Ian Chakeres, and Fred Baker.
+
+
+References
+
+   [1] Karthikeyan Bhargavan, Carl A. Gunter, and Davor Obradovic.
+       Fault Origin Adjudication.  In Proceedings of the Workshop on
+       Formal Methods in Software Practice, Portland, OR, August 2000.
+
+   [2] S. Bradner.  Key words for use in RFCs to Indicate Requirement
+       Levels.  Request for Comments (Best Current Practice) 2119,
+       Internet Engineering Task Force, March 1997.
+
+   [3] J. Manner et al.  Mobility Related Terminology (work in
+       progress).  draft-manner-seamoby-terms-02.txt, July 2001.
+
+   [4] IEEE 802.11 Committee, AlphaGraphics #35, 10201 N.35th Avenue,
+       Phoenix AZ 85051.  Wireless LAN Medium Access Control MAC and
+       Physical Layer PHY Specifications, June 1997.  IEEE Standard
+       802.11-97.
+
+   [5] D. Mills.  Simple Network Time Protocol (SNTP) Version 4 for
+       IPv4, IPv6 and OSI.  Request for Comments (Informational) 2030,
+       Internet Engineering Task Force, October 1996.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 28]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+A. Draft Modifications
+
+   The following are major changes between this version (10) of the AODV
+   draft and the previous version (09):
+
+    -  Specified that the next hop towards the originator of a RREQ
+       must be added to the precursor list for the destination, when an
+       intermediate node sends a Gratuitous RREP to the next hop towards
+       that destination (see section 6.6.3).
+
+    -  Specified that sequence numbers are to be compared as signed
+       integers.
+
+    -  Clarified that "broadcast" means transmission to 255.255.255.255,
+       and replaced terminology about "flooding" by "network-wide route
+       discovery", since that is what AODV does.
+
+    -  In line with last point, replaced "Flooding ID" by "RREQ ID", and
+       FLOOD_RECORD_TIME by RREQ_RECORD_TIME.
+
+    -  Changed name of "Source IP Address" field to be "Originator
+       IP Address" in RREQ message format, and changed the ``Source
+       Sequence Number'' field to be the ``Originator Sequence Number''
+       field in the RREQ and RREP message formats.
+
+    -  Clarified that RREQ messages do not have to be rebroadcast over
+       some types of network interfaces, when it may be presumed that
+       all nodes reachable from the network interface have already
+       received the same incoming RREQ message as the node processing
+       the RREQ (see section 6.14).
+
+    -  Made section 4-7 in version 09 subsections of one section in
+       version 10.
+
+    -  Changed the Lifetime field in section 6.2 to be set to
+       HELLO_INTERVAL * ALLOWED_HELLO_LOSS on reception of a control
+       packet.
+
+    -  Added that the lifetime for the route to the next hop towards a
+       destination should be updated when a data packet is forwarded to
+       that node.
+
+    -  Updated the calculation of MinimalLifetime in section 6.5.
+
+    -  Clarified section 6.11.
+
+    -  Added a definition for the timestamp extension field.
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 29]
+
+Internet Draft                   AODV                    19 January 2002
+
+
+    -  Introduced a new parameter, PATH_DISCOVERY_TIME, to replace the
+       former RREQ_RECORD_TIME, REV_ROUTE_LIFE, and RREP_WAIT_TIME
+       parameters.
+
+
+Author's Addresses
+
+   Questions about this memo can be directed to:
+
+      Charles E. Perkins
+      Communications Systems Laboratory
+      Nokia Research Center
+      313 Fairchild Drive
+      Mountain View, CA 94303
+      USA
+      +1 650 625 2986
+      +1 650 691 2170 (fax)
+      charliep@iprg.nokia.com
+
+
+      Elizabeth M. Belding-Royer
+      Dept. of Computer Science
+      University of California, Santa Barbara
+      Santa Barbara, CA 93106
+      +1 805 893 3411
+      +1 805 893 8553 (fax)
+      ebelding@cs.ucsb.edu
+
+
+      Samir R. Das
+      Department of Electrical and Computer Engineering
+      & Computer Science
+      University of Cincinnati
+      Cincinnati, OH 45221-0030
+      +1 513 556 2594
+      +1 513 556 7326 (fax)
+      sdas@ececs.uc.edu
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Perkins, Belding-Royer, Das        Expires 19 July 2002        [Page 30]

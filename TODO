@@ -1,0 +1,6 @@
+TODO for AODV-UU:
+
+* Add ICMP Destination Host Unreachable when RREQ fails.
+* Implement DELETE_PERIOD wait upon reboot.
+* Local Repair.
+* Internet gateway support.

@@ -1,0 +1,161 @@
+Introduction
+============
+
+This is an AODV implementation developed at Uppsala University,
+Sweden, with funding from Ericsson Telecom AB. It has been developed
+mainly for use in the APE testbed, http://apetestbed.sourceforge.net. 
+The code is released under the GNU General Public License (GPL). See
+the GPL document for more information.
+
+This release is based on AODV draft version 9, but does not currently
+implement local repair, multiple network interfaces and some other
+things. There are no guarantees that it implements all features
+correctly, although this is the goal. The code is provided as is. See
+the CHANGELOG for updates and changes between releases.
+
+This AODV implementation runs as a user-space daemon, maintaining the
+kernel routing table. Netfilter is used to capture data
+packets. Filtering is done in user-space, so there may be some
+performance penalties, although coding is much simplified. Stable
+operation has higher priority than performance.
+
+The code has been successfully tested in a real ad-hoc environment
+using up to 5 nodes (4 hops) without problems. If you happen to
+experience less successful operation of this implementation, please
+contact the author(s) and describe your problems.
+
+Requirements
+============
+
+* Linux OS.
+* Kernel with Netfilter support, (2.4.x or patched 2.2.x). 
+  Most Red Hat kernels have this support.
+* Wireless LAN cards in ad-hoc mode.
+
+Installation
+============
+
+Make sure you have the kernel source (or at least headers) of the
+kernel you are compiling against installed in /usr/src/linux.
+Otherwise the kernel modules might not compile.
+
+Compile with "make":
+
+> make
+
+Install (as "root"):
+
+> make install
+
+Run (as "root" with recommended options for debugging):
+
+> aodvd -l -t
+
+Command line options:
+-i <interface> 	- Set interface to attach to. Defaults to first wireless 
+		  interface.
+-d 		- Daemon mode (detach from console and run in background).
+		  No debug output to stdout.
+-l		- Write debug log to /var/log/aodvd.log
+-n  		- Receive N hellos from host before treating as neighbor.
+-t [secs]	- Write routing table to /var/log/aodvd_rt.log. Optionally 
+		  set interval in seconds (defaults to 3).
+-g  		- Force the gratuitous flag to be set on all RREQ's.
+-u		- Enable unidirectional link detection and avoidance.
+-h		- Help.
+-w		- Enable experimental Internet gateway support.
+
+The following modules must be loaded when running (or compiled into
+the kernel): 
+* ip_queue_aodv.o 
+* iptables_filter.o 
+* kaodv.o
+
+Module loading should happen automatically if AODV is installed and
+the module loading system (modprobe) is properly configured.
+
+Running a test
+==============
+
+To test the basic functionality of AODV you need at least three
+computers configured to run AODV. The nodes IP-address configuration
+should be in the same subnet. Then try to place the computers so that
+two of them are out of each others transmission range with the third
+computer in the middle, as in the illustration below. It may also be
+convenient to use a MAC-filter, like that part of the APE testbed,
+http://apetestbed.sourceforge.net.
+
+A <-> B <-> C
+
+Run on either A or C:
+
+> ping -R <IP A or C>
+
+to ping the remote computer. The "-R" option will record the route
+taken by ping packets, so that the actual route taken can be seen.
+
+Uni-directional links
+=====================
+
+This AODV implementation can detect the presence of uni-directional
+links, and avoid them if necessary. It is done by sending a RREP
+extension along with the hello messages containing the neighbor set of
+a node. This functionality is not part of the AODV draft as of version
+9, but similar functionality may be in future
+versions. Uni-directional link detection can be enabled with the "-u"
+option. This feature is experimental.
+
+Internet gateway support
+========================
+
+To use Internet gatway support, AODV must be started with the "-w"
+option. AODV enabled nodes should belong to the same subnet. 
+
+Computers with a default gateway configured before AODV is started,
+will reply to all requests outside the ad-hoc subnet. These computers
+should also have NAT enabled:
+
+> /sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+Change eth0 to the name of the interface connected to the Internet if
+necessary.
+
+Nodes which don't have a default gateway will with the "-w" option
+have one added to their routing tables, pointing to the wireless AODV
+enabled interface. This way they will forward all request for
+addresses outside the AODV subnet onto the ad-hoc network.
+ 
+NOTE that this feature is _very_ experimental, and is not very nicely
+implemented.
+
+Issues & Troubleshooting
+========================
+
+* If a crash occurs, the kernel module "kaodv.o" may remain loaded and
+can stop traffic from going through on the interface. Unload with
+"/sbin/rmmod kaodv" (root permissions required).
+
+* If the daemon has trouble loading the requested kernel modules, make
+sure that the "ipchains" compatibility module is not loaded. It will
+conflict with iptables.
+
+* This implementation does not currently allow routing between nodes
+with arbitrary subnet addresses.
+
+Notes about the source code
+===========================
+
+libipq.c and libipq.h are unmodified files from the netfilter
+package which is inluded here for convenience.
+
+ip_queue_aodv.c is a slightly modified version of the source code from
+the kernel source tree (ip_queue.c).
+
+Contact:
+========
+
+Source code and implementation questions:
+Erik Nordström <erno3431@student.uu.se>
+
+Misc. questions:
+Henrik Lundgren <henrikl@docs.uu.se>
