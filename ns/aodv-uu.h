@@ -94,45 +94,46 @@ class AODVUU;
 
 /* Timer class for managing the queue of timers */
 class TimerQueueTimer : public TimerHandler {
- public:
-  TimerQueueTimer(AODVUU *a) : TimerHandler() { agent_ = a; }
-  virtual void expire(Event *e);
+public:
+	TimerQueueTimer(AODVUU *a) : TimerHandler() { agent_ = a; }
+	virtual void expire(Event *e);
 
- protected:
-  AODVUU *agent_;
+protected:
+	AODVUU *agent_;
 };
 
 
 /* The AODV-UU routing agent class */
 class AODVUU : public Agent {
 
-  friend class TimerQueueTimer;
-
- public:
-  AODVUU(nsaddr_t id);
-  ~AODVUU();
-  void recv(Packet *p, Handler *);
-  int command(int argc, const char *const *argv);
-  void packetFailed(Packet *p);
+	friend class TimerQueueTimer;
+	
+	unsigned int ifindex; /* Always use ns interface */
+public:
+	AODVUU(nsaddr_t id);
+	~AODVUU();
+	void recv(Packet *p, Handler *);
+	int command(int argc, const char *const *argv);
+	void packetFailed(Packet *p);
  
- protected:
-  void interfaceQueue(nsaddr_t next_hop, int action);
-  void sendPacket(Packet *p, struct in_addr next_hop, double delay);
-  int startAODVUUAgent();
-  void scheduleNextEvent();
-  int gettimeofday(struct timeval *tv, struct timezone *tz);
-  char *if_indextoname(int ifindex, char *ifname);
-  Packet *pkt_encapsulate(Packet *p, struct in_addr gw_addr);
-  Packet *pkt_decapsulate(Packet *p);
+protected:
+	void interfaceQueue(nsaddr_t next_hop, int action);
+	void sendPacket(Packet *p, struct in_addr next_hop, double delay);
+	int startAODVUUAgent();
+	void scheduleNextEvent();
+	int gettimeofday(struct timeval *tv, struct timezone *tz);
+	char *if_indextoname(int ifindex, char *ifname);
+	Packet *pkt_encapsulate(Packet *p, struct in_addr gw_addr);
+	Packet *pkt_decapsulate(Packet *p);
 
-  int initialized;
-  TimerQueueTimer tqtimer;
-  PriQueue *ifqueue;
-  NsObject *ll; /* Pointer to link layer */
-  int  node_id;
-  MobileNode *node_;
-  NsObject *port_dmux_;
-  NsObject *wired_target_;
+	int initialized;
+	TimerQueueTimer tqtimer;
+	PriQueue *ifqueue;
+	NsObject *ll; /* Pointer to link layer */
+	int  node_id;
+	MobileNode *node_;
+	NsObject *port_dmux_;
+	NsObject *wired_target_;
 
 /*
   Extract method declarations (and occasionally, variables)
@@ -185,69 +186,69 @@ class AODVUU : public Agent {
 
 #undef NS_NO_GLOBALS
 
-  /* (Previously global) variables from main.c */
-  int log_to_file;
-  int rt_log_interval;
-  int unidir_hack;
-  int rreq_gratuitous;
-  int expanding_ring_search;
-  int internet_gw_mode;
-  int local_repair;
-  int receive_n_hellos;
-  int hello_jittering;
-  int optimized_hellos;
-  int ratelimit;
-  int llfeedback;
-  char *progname;
-  int wait_on_reboot;
-  struct timer worb_timer;
+	/* (Previously global) variables from main.c */
+	int log_to_file;
+	int rt_log_interval;
+	int unidir_hack;
+	int rreq_gratuitous;
+	int expanding_ring_search;
+	int internet_gw_mode;
+	int local_repair;
+	int receive_n_hellos;
+	int hello_jittering;
+	int optimized_hellos;
+	int ratelimit;
+	int llfeedback;
+	char *progname;
+	int wait_on_reboot;
+	struct timer worb_timer;
   
-  /* Parameters that are dynamic configuration values: */
-  int active_route_timeout;
-  int ttl_start;
-  int delete_period;
+	/* Parameters that are dynamic configuration values: */
+	int active_route_timeout;
+	int ttl_start;
+	int delete_period;
 
-  /* From aodv_hello.c */
-  struct timer hello_timer;
+	/* From aodv_hello.c */
+	struct timer hello_timer;
 
-  /* From aodv_rreq.c */
-  list_t rreq_records;
-  list_t rreq_blacklist;
+	/* From aodv_rreq.c */
+	list_t rreq_records;
+	list_t rreq_blacklist;
   
-  /* From seek_list.c */
-  list_t seekhead;
+	/* From seek_list.c */
+	list_t seekhead;
   
-  /* From aodv_socket.c */
-  char recv_buf[RECV_BUF_SIZE];
-  char send_buf[SEND_BUF_SIZE];
+	/* From aodv_socket.c */
+	char recv_buf[RECV_BUF_SIZE];
+	char send_buf[SEND_BUF_SIZE];
 
-  /* From debug.c */
-  int log_file_fd;
-  int log_rt_fd;
-  int log_nmsgs;
-  int debug;
-  struct timer rt_log_timer;
+	/* From debug.c */
+	int log_file_fd;
+	int log_rt_fd;
+	int log_nmsgs;
+	int debug;
+	struct timer rt_log_timer;
 
-  /* From defs.h */
-  struct host_info this_host;
-  unsigned int dev_indices[MAX_NR_INTERFACES];
-  inline int ifindex2devindex(unsigned int ifindex);
+	/* From defs.h */
+	struct host_info this_host;
+	unsigned int dev_indices[MAX_NR_INTERFACES];
+	inline int ifindex2devindex(unsigned int ifindex);
   
 /* From timer_queue.c */
-  list_t TQ;
+	list_t TQ;
 };
 
 
 /* From defs.h (needs the AODVUU class declaration) */
 inline int NS_CLASS ifindex2devindex(unsigned int ifindex)
 {
-  int i;
+	int i;
 
-  for (i = 0; i < this_host.nif; i++)
-    if (dev_indices[i] == ifindex)
-      return i;
+	for (i = 0; i < this_host.nif; i++)
+		if (dev_indices[i] == ifindex)
+			return i;
 
-  return -1;
+	return -1;
 }
 
 #endif /* AODV_UU_H */

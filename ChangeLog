@@ -164,8 +164,8 @@
 
 
 0.9.2:
-	
-* Adding and deleting entries from the kernel routing table is now  
+
+* Adding and deleting entries from the kernel routing table is now 
   handled through netlink sockets instead of IOCTLs.
 * Added support for debug output from the kernel module by passing
   messages over a netlink socket.
@@ -173,7 +173,7 @@
 * TCP can now work properly with gateway encapsulation by reducing
   the TCP maximum segment size (MSS) to account for the 8 byte
   encapsulation header. However, there seem to be some bug that may freeze the
-  machine, probably a locking issue. The code is therefore disabled in 
+  machine, probably a locking issue. The code is therefore disabled in
   koadv-mod.c. Enable at your own risk. Another alternative to run TCP is to
   se iperf and manually set the MSS to MAX minus 8 bytes.
 * Compile fixes for never kernels.
@@ -208,4 +208,4 @@
 0.9.6:
 * Fixed bug in requeuing of packets after local repair in ns-2
 (Balazs Kovacs <kovacsb@tmit.bme.hu>).
-* 
+* Compile fixes for Linux 2.6.22

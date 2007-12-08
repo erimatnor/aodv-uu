@@ -38,7 +38,7 @@
 #include "kaodv-expl.h"
 #include "kaodv-netlink.h"
 #include "kaodv-ipenc.h"
-
+#include "kaodv.h"
 /*
  * This is basically a shameless rippoff of the linux kernel's ip_queue module.
  */
@@ -152,11 +152,8 @@ kaodv_queue_enqueue_packet(struct sk_buff *skb, int (*okfn) (struct sk_buff *))
 {
 	int status = -EINVAL;
 	struct kaodv_queue_entry *entry;
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-	struct iphdr *iph = skb->nh.iph;
-#else
-	struct iphdr *iph = (struct iphdr *)skb->network_header;
-#endif
+	struct iphdr *iph = SKB_NETWORK_HDR_IPH(skb);
+
 	entry = kmalloc(sizeof(*entry), GFP_ATOMIC);
 
 	if (entry == NULL) {

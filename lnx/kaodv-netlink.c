@@ -19,6 +19,10 @@
  * Author: Erik Nordström, <erik.nordstrom@it.uu.se>
  *
  *****************************************************************************/
+#include <linux/version.h>
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19))
+#include <linux/config.h>
+#endif
 #include <linux/if.h>
 #include <linux/skbuff.h>
 #include <linux/spinlock.h>
@@ -34,6 +38,7 @@
 #include "kaodv-expl.h"
 #include "kaodv-queue.h"
 #include "kaodv-debug.h"
+#include "kaodv.h"
 
 static int peer_pid;
 static struct sock *kaodvnl;
@@ -62,14 +67,14 @@ static struct sk_buff *kaodv_netlink_build_msg(int type, void *data, int len)
 	if (!skb)
 		goto nlmsg_failure;
 
-	old_tail = skb->tail;
+	old_tail = SKB_TAIL_PTR(skb);
 	nlh = NLMSG_PUT(skb, 0, 0, type, size - sizeof(*nlh));
 
 	m = NLMSG_DATA(nlh);
 
 	memcpy(m, data, len);
 	
-	nlh->nlmsg_len = skb->tail - old_tail;
+	nlh->nlmsg_len = SKB_TAIL_PTR(skb) - old_tail;
 	NETLINK_CB(skb).pid = 0;  /* from kernel */
 	
 	return skb;

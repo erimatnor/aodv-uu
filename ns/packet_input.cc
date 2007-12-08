@@ -20,6 +20,8 @@
  *
  *****************************************************************************/
 
+#include <common/ip.h>
+
 #include "aodv-uu.h"
 
 extern int internet_gw_mode, wait_on_reboot, optimized_hellos, llfeedback;
@@ -32,10 +34,8 @@ void NS_CLASS processPacket(Packet * p)
     rt_table_t *fwd_rt, *rev_rt;
     struct in_addr dest_addr, src_addr;
     u_int8_t rreq_flags = 0;
-    unsigned int ifindex;
     struct ip_data *ipd = NULL;
     int pkt_flags = 0;
-    ifindex = NS_IFINDEX;	/* Always use ns interface */
     fwd_rt = NULL;		/* For broadcast we provide no next hop */
     ipd = NULL;			/* No ICMP messaging */
 
@@ -44,15 +44,13 @@ void NS_CLASS processPacket(Packet * p)
 
     src_addr.s_addr = ih->saddr();
     dest_addr.s_addr = ih->daddr();
-    
-    /* Am I originating this packet? */
-    if ((src_addr.s_addr == DEV_IFINDEX(ifindex).ipaddr.s_addr) && 
-	(ch->num_forwards() == 0)) {
-	    /* This check shouldn't be necessary, but it can't hurt */
-	    if (ch->ptype() != PT_AODVUU) {
-		    //Add the IP Header
-		    ch->size() += IP_HDR_LEN;
-	    }
+
+    if (ch->direction() == hdr_cmn::NONE) {
+	    DEBUG(LOG_DEBUG, 0,
+		  "Packet with src=%s dst=%s has no direction. DROPPING!", 
+		  ip_to_str(src_addr), ip_to_str(dest_addr));
+	    drop(p);
+	    return;
     }
 
     /* If this is a TCP packet and we don't have a route, we should
@@ -61,19 +59,20 @@ void NS_CLASS processPacket(Packet * p)
 	rreq_flags |= RREQ_GRATUITOUS;
     }
 
-    /* If the packet is not interesting we just let it go through... */
-    if (dest_addr.s_addr == AODV_BROADCAST ||
+    /* If the packet is a broadcast packet we just let it go
+     * through... */
+    if (dest_addr.s_addr == IP_BROADCAST ||
 	dest_addr.s_addr == DEV_IFINDEX(ifindex).broadcast.s_addr) {
-	/* Limit Non AODV broadcast packets (Rolf Winter
-	 * <winter@pcpool.mi.fu-berlin.de). */
-	ih->ttl() = ih->ttl() - 1;                
-       
-	if(ih->ttl() < 1)        
-	    Packet::free(p);                
-	else
-	    sendPacket(p, dest_addr, 0.0);
+	    
+	    DEBUG(LOG_DEBUG, 0,
+		  "Broadcast packet src=%s dst=%s prev_hop=%s", 
+		  ip_to_str(src_addr), ip_to_str(dest_addr), ch->prev_hop_);
+	    
+	    if (ch->direction() == hdr_cmn::DOWN)
+		    sendPacket(p, dest_addr, 0.0);
+	    else if (ch->direction() == hdr_cmn::UP)
+		    target_->recv(p, (Handler*)0);
 	return;
-
     }
     
     /* Find the entry of the neighboring node and the destination  (if any). */

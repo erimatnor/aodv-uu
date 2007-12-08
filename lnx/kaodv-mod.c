@@ -48,8 +48,7 @@
 #include "kaodv-queue.h"
 #include "kaodv-ipenc.h"
 #include "kaodv-debug.h"
-
-#define AODV_PORT 654
+#include "kaodv.h"
 
 #define ACTIVE_ROUTE_TIMEOUT active_route_timeout
 #define MAX_INTERFACES 10
@@ -121,11 +120,7 @@ static unsigned int kaodv_hook(unsigned int hooknum,
 			       const struct net_device *out,
 			       int (*okfn) (struct sk_buff *))
 {
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-	struct iphdr *iph = (*skb)->nh.iph;
-#else
-	struct iphdr *iph = (struct iphdr *)((*skb)->network_header); 
-#endif
+	struct iphdr *iph = SKB_NETWORK_HDR_IPH(*skb);
 	struct expl_entry e;
 	struct in_addr ifaddr, bcaddr;
 	int res = 0;
@@ -193,11 +188,7 @@ static unsigned int kaodv_hook(unsigned int hooknum,
 		if (is_gateway && iph->protocol == IPPROTO_MIPE &&
 		    iph->daddr == ifaddr.s_addr) {
 			ip_pkt_decapsulate(*skb);
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-			iph = (*skb)->nh.iph;
-#else
-			iph = (struct iphdr *)((*skb)->network_header);
-#endif
+			iph = SKB_NETWORK_HDR_IPH(*skb);
 			return NF_ACCEPT;
 		}
 		/* Ignore packets generated locally or that are for this

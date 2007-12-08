@@ -25,6 +25,7 @@
 
 #include "kaodv-ipenc.h"
 #include "kaodv-expl.h" /* For print_ip() */
+#include "kaodv.h"
 
 /* Simple function (based on R. Stevens) to calculate IP header checksum */
 static u_int16_t ip_csum(unsigned short *buf, int nshorts)
@@ -64,11 +65,8 @@ struct sk_buff *ip_pkt_encapsulate(struct sk_buff *skb, __u32 dest)
     /* Set old owner */
     if (skb->sk != NULL)
 	skb_set_owner_w(nskb, skb->sk);
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-    iph = skb->nh.iph;
-#else
-    iph = (struct iphdr *)skb->network_header;
-#endif
+
+    iph = SKB_NETWORK_HDR_IPH(skb);
 
     skb_put(nskb, sizeof(struct min_ipenc_hdr));
     
@@ -82,14 +80,11 @@ struct sk_buff *ip_pkt_encapsulate(struct sk_buff *skb, __u32 dest)
     skb = nskb;
     
     /* Update pointers */
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-    iph = skb->nh.iph = (struct iphdr *)skb->data;
-#else
-    iph = (struct iphdr *)skb->data;
-    skb->network_header = skb->data;
-#endif
+    
+    SKB_SET_NETWORK_HDR(skb, 0);
+    iph = SKB_NETWORK_HDR_IPH(skb);
 
-    ipe = (struct min_ipenc_hdr *)(skb->data + (iph->ihl << 2));
+    ipe = (struct min_ipenc_hdr *)(SKB_NETWORK_HDR_RAW(skb) + (iph->ihl << 2));
     
     /* Save the old ip header information in the encapsulation header */
     ipe->protocol = iph->protocol;
@@ -118,11 +113,7 @@ struct sk_buff *ip_pkt_decapsulate(struct sk_buff *skb)
 {
     struct min_ipenc_hdr *ipe;
     /* skb->nh.iph is probably not set yet */
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-    struct iphdr *iph = skb->nh.iph;
-#else
-    struct iphdr *iph = (struct iphdr *)skb->network_header; 
-#endif
+    struct iphdr *iph = SKB_NETWORK_HDR_IPH(skb);
 
     ipe = (struct min_ipenc_hdr *)((char *)iph + (iph->ihl << 2));
 
@@ -136,12 +127,8 @@ struct sk_buff *ip_pkt_decapsulate(struct sk_buff *skb)
     
     skb_trim(skb, skb->len - sizeof(struct min_ipenc_hdr));
     
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
-    skb->nh.iph = iph = (struct iphdr *)skb->data;
-#else
-    iph = (struct iphdr *)skb->data;
-    skb->network_header = skb->data;
-#endif
+    SKB_SET_NETWORK_HDR(skb, 0);
+    iph = SKB_NETWORK_HDR_IPH(skb);
 
     iph->tot_len = htons((ntohs(iph->tot_len) - sizeof(struct min_ipenc_hdr))); 
     ip_send_check(iph);
