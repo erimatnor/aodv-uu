@@ -1,0 +1,166 @@
+
+kaodv-debug.c,18
+int trace(17,305
+
+kaodv-expl.c,772
+#define EXPL_MAX_LEN 36,1306
+static unsigned int expl_len;38,1333
+static rwlock_t expl_lock 39,1363
+#define list_is_first(list_is_first42,1439
+static struct timer_list expl_timer;49,1720
+static inline void __kaodv_expl_set_next_timeout(53,1811
+static void kaodv_expl_timeout(73,2219
+static inline void __kaodv_expl_flush(100,2832
+static inline int __kaodv_expl_add(112,3055
+static inline struct expl_entry *__kaodv_expl_find(136,3517
+static inline int __kaodv_expl_del(149,3752
+int kaodv_expl_del(173,4154
+int kaodv_expl_get(197,4443
+int kaodv_expl_add(216,4771
+static int kaodv_expl_print(267,5749
+kaodv_expl_proc_info(318,6849
+int kaodv_expl_update(333,7095
+void kaodv_expl_flush(368,7724
+void kaodv_expl_init(382,7925
+void kaodv_expl_fini(391,8066
+
+kaodv-ipenc.c,123
+static u_int16_t ip_csum(29,1188
+struct sk_buff *ip_pkt_encapsulate(43,1440
+struct sk_buff *ip_pkt_decapsulate(108,3112
+
+kaodv-mod.c,602
+#define AODV_PORT 51,1633
+#define ACTIVE_ROUTE_TIMEOUT 53,1656
+#define MAX_INTERFACES 54,1706
+static int qual 56,1733
+static unsigned long pkts_dropped 57,1754
+int qual_th 58,1793
+int is_gateway 59,1810
+int active_route_timeout 60,1830
+#define ADDR_HOST 70,2072
+#define ADDR_BROADCAST 71,2092
+void kaodv_update_route_timeouts(73,2118
+static unsigned int kaodv_hook(117,3389
+int kaodv_proc_info(270,7333
+static char *ifname[291,7759
+static int num_parms 294,7826
+static struct nf_hook_ops kaodv_ops[306,8155
+static int __init kaodv_init(336,8673
+static void __exit kaodv_exit(408,9826
+
+kaodv-netlink.c,716
+static int peer_pid;38,1303
+static struct sock *kaodvnl;39,1324
+#define sk_receive_queue 44,1444
+#define sk_socket 45,1483
+static struct sk_buff *kaodv_netlink_build_msg(50,1571
+void kaodv_netlink_send_debug_msg(85,2178
+void kaodv_netlink_send_rt_msg(101,2497
+void kaodv_netlink_send_rt_update_msg(122,2957
+void kaodv_netlink_send_rerr_msg(146,3509
+static int kaodv_netlink_receive_peer(169,4043
+static int kaodv_netlink_rcv_nl_event(227,5441
+static struct notifier_block kaodv_nl_notifier 244,5807
+#define RCV_SKB_FAIL(RCV_SKB_FAIL248,5908
+static inline void kaodv_netlink_rcv_skb(250,5990
+static void kaodv_netlink_rcv_sk(311,7272
+int kaodv_netlink_init(331,7615
+void kaodv_netlink_fini(347,8099
+
+kaodv-queue.c,1031
+#define KAODV_QUEUE_QMAX_DEFAULT 45,1525
+#define KAODV_QUEUE_PROC_FS_NAME 46,1563
+#define NET_KAODV_QUEUE_QMAX 47,1610
+#define NET_KAODV_QUEUE_QMAX_NAME 48,1644
+struct kaodv_rt_info kaodv_rt_info50,1700
+struct kaodv_queue_entry kaodv_queue_entry56,1766
+typedef int (*kaodv_queue_cmpfn)kaodv_queue_cmpfn63,1907
+static unsigned int queue_maxlen 65,1986
+static rwlock_t queue_lock 66,2047
+static unsigned int queue_total;67,2094
+static inline int __kaodv_queue_enqueue_entry(70,2158
+*__kaodv_queue_find_entry(88,2639
+*__kaodv_queue_find_dequeue_entry(102,2953
+static inline void __kaodv_queue_flush(116,3213
+static inline void __kaodv_queue_reset(126,3405
+*kaodv_queue_find_dequeue_entry(132,3511
+void kaodv_queue_flush(142,3759
+kaodv_queue_enqueue_packet(150,3881
+static inline int dest_cmp(188,4688
+int kaodv_queue_find(193,4807
+int kaodv_queue_set_verdict(207,5050
+static int kaodv_queue_get_info(262,6110
+static int init_or_cleanup(283,6516
+int kaodv_queue_init(313,7023
+void kaodv_queue_fini(319,7084
+
+kaodv-debug.h,149
+#define _KAODV_DEBUG_H23,1019
+#define KAODV_DEBUG(KAODV_DEBUG33,1134
+static inline char *print_ip(35,1191
+static inline char *print_eth(53,1485
+
+kaodv-expl.h,68
+#define _KAODV_EXPL_H23,1018
+struct expl_entry expl_entry29,1085
+
+kaodv-ipenc.h,105
+#define _KAODV_IPENC_H25,1076
+#define IPPROTO_MIPE 31,1176
+struct min_ipenc_hdr min_ipenc_hdr33,1201
+
+kaodv-mod.h,217
+#define _KAODV_MOD_H2,21
+struct if_info if_info10,183
+static rwlock_t ifilock 18,327
+static inline int if_info_add(22,442
+static inline void if_info_purge(61,1135
+static inline int if_info_from_ifindex(75,1402
+
+kaodv-netlink.h,1268
+#define _KAODV_NETLINK_H23,1021
+#define NETLINK_AODV 33,1277
+  AODVGRP_NOTIFY,36,1321
+#define AODVGRP_NOTIFY 37,1339
+  __AODVGRP_MAX38,1379
+#define AODVGRP_MAX 41,1399
+	KAODVM_BASE 47,1634
+#define KAODVM_BASE 48,1654
+	KAODVM_ADDROUTE,49,1686
+#define KAODVM_ADDROUTE 50,1704
+	KAODVM_DELROUTE,51,1744
+#define KAODVM_DELROUTE 52,1762
+	KAODVM_TIMEOUT,53,1802
+#define KAODVM_TIMEOUT 54,1819
+	KAODVM_ROUTE_REQ,55,1857
+#define KAODVM_ROUTE_REQ 56,1876
+	KAODVM_REPAIR,57,1918
+#define KAODVM_REPAIR 58,1934
+	KAODVM_NOROUTE_FOUND,59,1970
+#define KAODVM_NOROUTE_FOUND 60,1993
+	KAODVM_ROUTE_UPDATE,61,2043
+#define KAODVM_ROUTE_UPDATE 62,2065
+	KAODVM_SEND_RERR,63,2113
+#define KAODVM_SEND_RERR 64,2132
+	KAODVM_CONFIG,65,2174
+#define KAODVM_CONFIG 66,2190
+	KAODVM_DEBUG,67,2226
+#define KAODVM_DEBUG 68,2241
+	__KAODV_MAX,69,2275
+#define KAODVM_MAX 70,2289
+} typenames[76,2372
+static inline char *kaodv_msg_type_to_str(89,2782
+typedef struct kaodv_rt_msg kaodv_rt_msg101,2987
+} kaodv_rt_msg_t;kaodv_rt_msg_t109,3126
+#define KAODV_RT_GW_ENCAP 112,3174
+#define KAODV_RT_REPAIR 113,3215
+#define PKT_INBOUND 116,3337
+#define PKT_OUTBOUND 117,3360
+typedef struct kaodv_conf_msg kaodv_conf_msg121,3471
+} kaodv_conf_msg_t;kaodv_conf_msg_t125,3561
+
+kaodv-queue.h,99
+#define _KAODV_QUEUE_H23,1020
+#define KAODV_QUEUE_DROP 25,1044
+#define KAODV_QUEUE_SEND 26,1071
