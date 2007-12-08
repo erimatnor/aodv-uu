@@ -1,0 +1,71 @@
+date		author	
+
+2001-10-03 	Erik
+ 
+* The synchronization of the internal AODV routing table and the
+kernel routing table seem to be a problem.
+
+2001-10-04	Erik
+
+* How do we update each the lifetime field of a route for each _data_
+packet received, as suggested in the draft v8 section 8.1, last
+sentence?
+
+* Why isn't send_aodv_msg() called after calls to sendRERR_AODV()?
+
+2001-10-05	Erik
+
+* Updated callout queue to include millisecond resolution. This seem
+better since the draft give times in milliseconds. I also believe the
+parameters in params.h were wrong, since some of them were defined in
+seconds which they aren't in the draft.
+
+* Cleaned up main loop and how age_callout_queue() is called. I hope I
+didn't mess things up... ;-)
+
+2001-10-06	Erik
+
+* Removed removeNeighbor() and merged with sendRERR_AODV(). I found
+that the stuff done in removeNeighbor() were in some parts wrong,
+while the rest fitted better elsewhere.
+
+* Removed updateRTEntry() in aodv.c and merged that code with
+rcvRREQ_AODV() and rcvRREP_AODV() from where it was previously
+called. I found that rcvRREQ_AODV() and rcvRREP_AODV() actually should
+do things a bit different when in updateRTEntry(), so the best
+solution was to move the code instead. It also makes it more easy to
+follow the flow in the draft for RREQ's and RREP's respectively.
+
+* Updated the AODV routing table to hold time in milliseconds, since
+the rest of the code already had that now.
+
+* Fixed so that an expired route entry have the corresponding kernel
+entry immidiately removed upon expiring. The AODV route entry is not
+removed until DELETE_PERIOD. Because of this, it was also necessary to
+add the kernel route again in updateEntry (rte.c) if the AODV entry
+was previously expired (i.e. hopcnt = INFTY).
+
+* When running the daemon at my home computer, where I have the
+wireless card as eth1, the daemon is unable to send hello msgs. It
+reports "Network is unreachable", which indicates it is trying to send
+on eth0 (also verified). I believe the bug is somewhere in
+send_aodv_msg(). Receiving messages works fine though...
+
+2001-10-09 	Erik 
+
+* Added a simple routine to rte.c to print the AODV
+routing table. Currently uses a bad solution of appending output to a
+file (aodv_rte.log). Should be improved when there is time.
+
+2001-10-10 	Erik 
+
+* Extended and improved the communication between the aodv daemon and
+the kernel through the /dev/aodv character device. Now other types of
+messages and information can be more easily be sent and received than
+just a 4 byte IP address.
+
+2001-10-16 	Erik 
+
+* Seems that addresses are converted to network byte order (eg. with
+htonl() in aodv_comm.c), even though internally already in network
+order. Therefore ip packets go on the ether in host order...

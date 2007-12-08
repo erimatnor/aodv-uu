@@ -1,0 +1,274 @@
+This document describes the compliance between the source code and draft v.8
+The focus will be on Section 8 in the draft.
+
+"TO CHECK" means that we MUST CHECK if the requirements are implemented.
+"TO DO" means that we have checked and found that it is _NOT_ IMPLEMENTED.
+"DONE" means that it is IMPLEMENTED (we have checked/implemented ourselves).
+
+* 4. Route Request (RREQ) Message Format
+========================================
+TO CHECK: 
+---------
+check if (and update code if neccessary): 
+
+
+TO DO:
+------
+
+
+DONE:
+-----
+
+- Updated header to include the J R G flags, so that it now conforms
+with the draft.
+
+
+* 5. Route Reply (RREP) Message Format
+======================================
+TO CHECK: 
+---------
+check if (and update code if neccessary): 
+
+
+TO DO:
+------
+
+
+DONE:
+-----
+
+- Updated header to include the A R flags, so that it now conforms
+with the draft. Also fixed some lengths of some other parts of the header...
+
+* 6. Route Error (RRER) Message Format
+======================================
+TO CHECK: 
+---------
+check if (and update code if neccessary): 
+
+
+TO DO:
+------
+
+
+DONE:
+-----
+
+- Updated header to include the N flag, so that it now conforms
+with the draft. Also fixed some lengths of some other parts of the header...
+
+
+* 8.1  Maintaining Route Utilization Records
+============================================
+TO CHECK:
+---------
+- not fully checked yet.
+
+
+TO DO:
+------
+- updating a route's Lifetime field with ACTIVE_ROUTE_TIMEOUT is _not_ impl.
+  This has to be done each time a _data_ packet is forwarded. But how do 
+  we know this? Probably needs kernel modifications.
+
+DONE:
+-----
+- ?
+
+
+
+* 8.2  Generating Route Requests
+=================================
+TO CHECK: 
+---------
+check if (and update code if neccessary): 
+- the G flag is set.
+- DestUnreach sent to application if no answer after max #retries
+
+
+TO DO:
+------
+- _Data_ packets SHOULD be buffered FIFO during route discovery. Probably 
+  needs kernel modifications. How else do we get hold of data packets??? 
+
+DONE:
+------
+- RREQ is generated when not have active route (currently trigged by ARP).
+- RREQ is generated if we have an invalid route, i.e., hpcnt=INFTY. [in routeDiscovery()]
+- RREQ DestSeqNo(DSN) is last known DSN for this dest and is copied from the
+  routing table's DSN. If no DSN, then DSN=0. [in sendRREQ_AODV()]
+- BroadcastID incremented by 1 and HopCount is set to 0. [in sendRREQ_AODV()]
+- SSN = node's own SeqNo. [in sendRREQ_AODV()]
+- BcastID must be updated for every re-broadcast of RREQ (due to timeout).
+
+ALTERNATIVE SETTINGS USED:
+--------------------------
+- node waits 2*TTL*NODE_TRAVERSAL_TIME instead of NET_TRAVERSAL_TIME for RREP 
+  (according to expanding ring search technique described in Section 8.2.1)
+- node can rebroadcast RREQ (if it gets no answer) max RREQ_TRIES times:
+  we use values from 8.2.1 instead
+- datapackets should be dropped if no answer after max #retires 
+  NOTE by Erik: When using expanding ring search, RREQ #retries are only 
+  incremented after TTL has reached TTL_THRESHOLD an then to a maximum of 
+  RREQ_RETRIES before the search is finished. Draft section 8.2.1.
+
+
+
+* 8.2.1  Controlling Route Request broadcasts
+=============================================
+TO CHECK: 
+---------
+check if (and update code if neccessary): 
+- for each re-broadcast, "the discovery timeout is calculated as before"
+- route entries should not be expunged before DELETE_PERIOD
+- Any route entry should not be expunged before RREP_WAIT_TIME
+
+
+TO DO:
+------
+- optimization: dynamic timeouts (not implemented)
+
+
+DONE:
+------
+- initially use TTL = TTL_START in RREQ packet.  [in routeDiscovery()]
+- discovery timer (to get answer on RREQ) = 2*TTL*NODE_TRAVERSAL_TIME
+- if RREQ re-broadcast, TTL is incremented by TTL_INCREMENT until TTL_THRESHOLD
+  after that TTL=NET_DIAMETER is used instead. [in route_discovery_timeout()]
+- BcastID increment each re-broadcast (see 8.2 above)
+- max #re-broadcast is RREQ_TRIES after TTL = TTL_THRESHOLD 
+- use TTL=last_hopcount in RREQ if we have used this route before. [in routeDiscovery()]
+- TTL_INCREMENT, TTL_THRESHOLD, NET_DIAMETER all according to 8.2 above.
+- when receiving RREP, store away the last_hopcount. [in routeDiscovery()]
+
+
+* 8.3  Forwarding RREQs
+=========================
+TO CHECK: 
+---------
+check if (and update code if neccessary): 
+
+
+TO DO:
+------
+
+DONE:
+-----
+- check if we have received <src_addr, BcastID> before within the last
+  BROADCAST_RECORD_TIME: silently discard packet. [in rcvRREQ_AODV()]
+
+
+* 8.3.1  Processing RREQs
+==========================
+TO CHECK: 
+---------
+check if (and update code if neccessary): 
+  - when Reverse route is created/updated following actions are carried out:
+	- next hop in routing table = source IP addr (from IP header!)
+	- the hop count is copied from HopCount in RREQ
+	- lifetime of route = max( curr_lifetime, currTime+REV_ROUTE_LIFE)
+  - even if route not deleted due to high DSN, but scheduled to expire before 
+    REV_ROUTE_LIFE its lifetime is still updated to currTime+REV_ROUTE_LIFE
+
+
+TO DO:
+------
+- Verify that the arguments of sendRREP_AODV() and aodv_snd_msg() when
+sending Gratuitous RREP is correct.
+
+DONE:
+-----
+This is in processUnicastRREQ(): (Which is called from rcvRREQ_AODV()).
+
+- upon RREQ receipt:
+  - if no active route: 
+     - IP_addr -> own_IP_addr
+     - DSN = max(DSN, ownDSN_from_routingtable)
+     - TTL--
+     - HopCount++
+- if active route exists:
+   - if routingtable_DSN < RREQ_DSN: rebroadcast as if we had no route
+  - generate RREP if active route + ownDSN > RREQ_DSN or I am the destination.
+
+- update Reverse route if: srcSeqNo > DSN of src in routing table
+			 OR: seqNo are equal, but hopcnt in RREQ is smaller 
+			     than in route table.
+
+* 8.4  Generating Route Replies
+===============================
+TO CHECK: 
+---------
+check if (and update code if neccessary): 
+
+
+TO DO:
+------
+
+
+DONE:
+-----
+
+* 8.4  Route Error Messages
+===========================
+TO CHECK: 
+---------
+check if (and update code if neccessary): 
+
+
+TO DO:
+------
+
+- For case (ii) when a node receives a _data_ packet for a destination
+to which it does not have an active route, we send an RERR msg with
+that destination included as an unreachable destination. A new
+function called forwardDataPacket() has been created to take care of
+this (case (ii)), but this function MUST somehow be called when a
+_data_ packet is received... The question is HOW? Somehow we must know
+when we receive a _data_ packet which should be forwarded. Probably
+needs kernel modifications.
+
+DONE: 
+----- 
+
+- For case (i) and (ii) the destination sequence numbers of the
+unreachable destination(s) are increased by one.
+
+- For case (i), when sending a RERR the destinations (routing entries)
+which have the unreachable destination as next hop gets their
+dest. seqno increased and are then included in the RERR as additional
+unreachable destinations.
+
+* 8.9 Route Error Messages
+==========================
+TO CHECK: 
+---------
+check if (and update code if neccessary): 
+
+
+TO DO:
+------
+
+- Find a solution for case (ii) section 8.9, i.e. we should generate a
+RERR if we receive a _data_ packet for a node for which don't have a
+route...
+
+DONE:
+-----
+
+
+* 8.9.1  Local Repair
+=====================
+This is something that one MAY implement as an optimization.
+
+TO CHECK: 
+---------
+check if (and update code if neccessary): 
+
+
+TO DO:
+------
+- Implement local repair.
+
+DONE:
+-----
+- Nothing.

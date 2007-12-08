@@ -1,0 +1,81 @@
+#!/bin/bash
+#****************************************************************************
+#
+# Copyright (C) 2001 Uppsala University.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# Author: Erik Nordström, <erno3431@student.uu.se>
+#
+#*****************************************************************************/
+
+
+IFACE=eth0
+OPTS=$@
+kernelv=$(uname -r)
+IFACE=`echo $@ | gawk 'BEGIN{FS="-i "}; {print $2}'`
+
+# Small sanity check...
+if [ -z $IFACE ]; then
+    IFACE="eth0"
+fi
+
+echo "start_aodv: ifname=$IFACE"
+
+if [ `whoami` != root ]; then 
+    echo "You have to be root to run aodv!"
+    exit; 
+fi
+# Remove loaded module...
+/sbin/rmmod kaodv &>/dev/null
+
+# Insert kaodv.o module if necessary...
+if [ -z $(gawk '/^kaodv/ { print $1; }' </proc/modules) ]; then
+    if [ -f ./kaodv.o ]; then
+	/sbin/insmod kaodv.o ifname=$IFACE
+    else
+	/sbin/modprobe kaodv ifname=$IFACE
+    fi
+fi
+
+if [ -z $(gawk '/^ip_queue/ { print $1; }' </proc/modules) ]; then
+    /sbin/insmod /lib/modules/$kernelv/kernel/net/ipv4/netfilter/ip_queue.o 2>/dev/null
+fi
+
+if [ -z $(gawk '/^iptable_filter/ { print $1; }' </proc/modules) ]; then
+    /sbin/insmod /lib/modules/$kernelv/kernel/net/ipv4/netfilter/iptable_filter.o 2>/dev/null
+fi
+
+# turn off ICMP redirects:
+echo 0 > /proc/sys/net/ipv4/conf/$IFACE/accept_redirects
+echo 0 > /proc/sys/net/ipv4/conf/$IFACE/send_redirects
+ 
+# Add broadcast address for the interface we use:
+
+# start aodvd:
+if [ -f ./aodvd ]; then
+    ./aodvd $OPTS
+else
+    if [ -f /usr/sbin/aodvd ]; then
+	/usr/sbin/aodvd $OPTS
+    else
+	echo "aodvd not found!"
+	exit
+    fi
+fi
+
+echo "start_aodv: Removing kernel module (kaodv)."
+/sbin/rmmod kaodv
+/sbin/rmmod ip_queue
