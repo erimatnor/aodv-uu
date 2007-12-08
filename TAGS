@@ -1,0 +1,490 @@
+
+aodv_hello.c,303
+static struct timer hello_timer;44,1436
+long NS_CLASS hello_jitter(47,1477
+void NS_CLASS hello_start(60,1762
+void NS_CLASS hello_stop(76,2045
+void NS_CLASS hello_send(81,2109
+void NS_CLASS hello_process(158,4244
+#define HELLO_DELAY 293,7717
+NS_INLINE void NS_CLASS hello_update_timeout(297,7861
+
+aodv_neighbor.c,79
+void NS_CLASS neighbor_add(38,1315
+void NS_CLASS neighbor_link_break(78,2391
+
+aodv_rerr.c,331
+static struct rerr_record *rerr_send_list_head 36,1233
+RERR *NS_CLASS rerr_create(40,1297
+void NS_CLASS rerr_add_udest(60,1795
+void NS_CLASS rerr_process(72,2075
+struct rerr_record *NS_CLASS rerr_send_list_insert(195,5781
+struct rerr_record *NS_CLASS rerr_send_list_find(225,6590
+int NS_CLASS rerr_send_list_remove(241,6877
+
+aodv_rrep.c,261
+RREP *NS_CLASS rrep_create(42,1318
+RREP_ack *NS_CLASS rrep_ack_create(78,2147
+void NS_CLASS rrep_ack_process(90,2371
+void NS_CLASS rrep_send(109,2853
+void NS_CLASS rrep_forward(178,4869
+void NS_CLASS rrep_process(231,6458
+int rrep_add_hello_ext(336,9934
+
+aodv_rreq.c,710
+#define DEBUG_OUTPUT41,1334
+static struct rreq_record *rreq_record_head 44,1372
+static struct blacklist *rreq_blacklist_head 50,1617
+RREQ *NS_CLASS rreq_create(57,1819
+void NS_CLASS rreq_send(95,2794
+void NS_CLASS rreq_forward(115,3336
+void NS_CLASS rreq_process(137,4016
+void NS_CLASS rreq_route_discovery(304,9282
+void NS_CLASS rreq_local_repair(366,10981
+NS_STATIC struct rreq_record *NS_CLASS rreq_record_insert(433,12869
+NS_STATIC struct rreq_record *NS_CLASS rreq_record_find(463,13832
+int NS_CLASS rreq_record_remove(479,14187
+struct blacklist *NS_CLASS rreq_blacklist_insert(501,14626
+struct blacklist *NS_CLASS rreq_blacklist_find(527,15389
+int NS_CLASS rreq_blacklist_remove(541,15675
+
+aodv_socket.c,482
+#define SO_RECVBUF_SIZE 55,1655
+static char recv_buf[57,1689
+static char send_buf[58,1726
+struct in_pktinfo in_pktinfo71,2066
+void NS_CLASS aodv_socket_init(80,2218
+void NS_CLASS aodv_socket_process_packet(197,5136
+void NS_CLASS recvAODVUUPacket(236,6352
+static void aodv_socket_read(275,7390
+void NS_CLASS aodv_socket_send(390,10787
+AODV_msg *NS_CLASS aodv_socket_new_msg(566,15713
+AODV_msg *NS_CLASS aodv_socket_queue_msg(594,16565
+void aodv_socket_cleanup(605,16916
+
+aodv_timeout.c,446
+void NS_CLASS route_discovery_timeout(53,1608
+void NS_CLASS local_repair_timeout(128,3709
+void NS_CLASS route_expire_timeout(174,4907
+void NS_CLASS route_delete_timeout(195,5338
+void NS_CLASS hello_timeout(214,5862
+void NS_CLASS rreq_record_timeout(239,6463
+void NS_CLASS rreq_blacklist_timeout(252,6806
+void NS_CLASS rerr_send_list_timeout(264,7049
+void NS_CLASS rrep_ack_timeout(276,7245
+void NS_CLASS wait_on_reboot_timeout(291,7677
+
+debug.c,652
+int log_file_fd 49,1479
+int log_rt_fd 50,1501
+int log_nmsgs 51,1521
+int debug 52,1540
+struct timer rt_log_timer;53,1555
+void NS_CLASS log_init(56,1590
+void NS_CLASS log_rt_table_init(103,2978
+void NS_CLASS log_cleanup(110,3155
+void NS_CLASS write_to_log_file(118,3334
+char *packet_type(132,3627
+void NS_CLASS log(149,3913
+char *NS_CLASS rreq_flags_to_str(228,5716
+char *NS_CLASS rrep_flags_to_str(251,6058
+void NS_CLASS log_pkt_fields(268,6292
+char *NS_CLASS rt_flags_to_str(303,7448
+char *NS_CLASS state_to_str(319,7698
+char *NS_CLASS devs_ip_to_str(329,7854
+void NS_CLASS print_rt_table(344,8171
+char *NS_CLASS ip_to_str(443,11195
+
+endian.c,58
+int litend(35,1275
+int bigend(42,1355
+int main(47,1397
+
+icmp.c,160
+#define ICMP_BUFSIZE 31,1158
+char icmp_send_buf[33,1213
+int icmp_socket;34,1247
+static unsigned short cksum(36,1265
+int icmp_send_host_unreachable(58,1671
+
+kaodv.c,528
+#define MODVERSIONS25,1048
+#define USE_OLD_ROUTE_ME_HARDER29,1176
+#define USE_OLD_ROUTE_ME_HARDER32,1221
+static struct nf_hook_ops nf_hook1,54,1718
+static struct nf_hook_ops nf_hook1, nf_hook2,54,1718
+static struct nf_hook_ops nf_hook1, nf_hook2, nf_hook3;54,1718
+#define AODV_PORT 56,1775
+#define MAX_INTERFACES 57,1797
+unsigned int ifindices[59,1824
+int nif 60,1864
+static int route_me_harder(69,2197
+unsigned int nf_aodv_hook(94,2676
+char *ifname[158,4313
+int init_module(161,4420
+void cleanup_module(207,5457
+
+k_route.c,95
+int k_add_rte(43,1419
+int k_del_rte(106,2699
+int k_chg_rte(159,3895
+int k_del_arp(174,4160
+
+libipq.c,1015
+    IPQ_ERR_NONE 41,1096
+    IPQ_ERR_IMPL,42,1118
+    IPQ_ERR_HANDLE,43,1136
+    IPQ_ERR_SOCKET,44,1156
+    IPQ_ERR_BIND,45,1176
+    IPQ_ERR_BUFFER,46,1194
+    IPQ_ERR_RECV,47,1214
+    IPQ_ERR_NLEOF,48,1232
+    IPQ_ERR_ADDRLEN,49,1251
+    IPQ_ERR_STRUNC,50,1272
+    IPQ_ERR_RTRUNC,51,1292
+    IPQ_ERR_NLRECV,52,1312
+    IPQ_ERR_SEND,53,1332
+    IPQ_ERR_SUPP,54,1350
+    IPQ_ERR_RECVBUF,55,1368
+    IPQ_ERR_TIMEOUT56,1389
+#define IPQ_MAXERR 58,1412
+struct ipq_errmap_t ipq_errmap_t60,1448
+} ipq_errmap[63,1506
+static int ipq_errno 98,2430
+ipq_netlink_sendto(114,2875
+ipq_netlink_sendmsg(124,3132
+ipq_netlink_recvfrom(134,3363
+static char *ipq_strerror(198,4694
+struct ipq_handle *ipq_create_handle(215,5106
+int ipq_destroy_handle(255,6145
+int ipq_set_mode(264,6253
+ipq_read(286,6834
+int ipq_message_type(292,6978
+int ipq_get_msgerr(297,7080
+ipq_packet_msg_t *ipq_get_packet(304,7266
+ipq_set_verdict(310,7384
+int ipq_ctl(353,8518
+char *ipq_errstr(358,8595
+void ipq_perror(363,8659
+
+link_qual.c,480
+static int iwsock 19,359
+struct ip_mac ip_mac21,383
+static struct ip_mac ip2mac_table[28,534
+static int nipmac 29,581
+static void clear_spy_lists(34,807
+void link_qual_init(53,1183
+void link_qual_cleanup(123,2866
+int ip2mac(129,2942
+char *iw_pr_ether(146,3302
+static int mac_to_bin(156,3586
+static int link_qual_get(203,4480
+int link_qual_get_from_ip(238,5444
+int iw_check_mac_addr_type(257,5888
+int link_qual_add_spy(272,6283
+int link_qual_add_spy_by_ip(327,7722
+
+main.c,943
+int log_to_file 51,1568
+int rt_log_interval 52,1589
+int unidir_hack 53,1662
+int rreq_gratuitous 54,1683
+int expanding_ring_search 55,1708
+int internet_gw_mode 56,1739
+int local_repair 57,1765
+int receive_n_hellos 58,1787
+int hello_jittering 59,1813
+int optimized_hellos 60,1838
+int ratelimit 61,1864
+char *progname;62,1932
+int wait_on_reboot 63,1948
+int hello_qual_threshold 64,1972
+char *spy_addrs 65,2003
+struct timer worb_timer;66,2027
+struct option longopts[70,2104
+void usage(91,2927
+int set_kernel_options(122,4383
+int find_default_gw(190,6048
+struct sockaddr_in *get_if_info(223,6640
+#define CALLBACK_FUNCS 247,7238
+static struct callback callback248,7263
+} callbacks[251,7326
+static int nr_callbacks 253,7356
+int attach_callback_func(255,7386
+void load_modules(271,7833
+void remove_modules(316,8966
+void host_init(323,9162
+void signal_handler(455,12709
+int main(470,12988
+static void cleanup(662,17269
+
+packet_input.c,275
+#define BUFSIZE 46,1501
+struct ipq_handle *h;51,1601
+static void die(61,1780
+void NS_CLASS packet_input_cleanup(69,1898
+void NS_CLASS packet_input_init(78,2019
+void NS_CLASS processPacket(103,2613
+#define PACKET_IS_INBOUND 288,8302
+#define PACKET_IS_INBOUND 290,8365
+
+packet_queue.c,235
+void NS_CLASS packet_queue_init(38,1237
+void NS_CLASS packet_queue_destroy(46,1333
+void NS_CLASS packet_queue_add(73,1888
+int NS_CLASS packet_queue_drop(120,2808
+int NS_CLASS packet_queue_send(162,3621
+#define ARP_DELAY 169,3805
+
+routing_table.c,627
+void NS_CLASS rt_table_init(49,1540
+void NS_CLASS rt_table_destroy(61,1777
+unsigned int hashing(90,2499
+rt_table_t *NS_CLASS rt_table_insert(98,2659
+rt_table_t *NS_CLASS rt_table_update(208,5596
+NS_INLINE rt_table_t *NS_CLASS rt_table_update_timeout(273,7517
+rt_table_t *NS_CLASS rt_table_find_active(295,8139
+rt_table_t *NS_CLASS rt_table_find(310,8427
+int NS_CLASS rt_table_invalidate(340,9022
+void NS_CLASS rt_table_delete(412,11043
+NS_STATIC void NS_CLASS rt_table_remove_precursor(457,12079
+void NS_CLASS precursor_add(474,12580
+void NS_CLASS precursor_remove(505,13479
+void precursor_list_destroy(536,14207
+
+seek_list.c,218
+static seek_list_t *seek_list_head 39,1313
+seek_list_t *NS_CLASS seek_list_insert(46,1436
+int NS_CLASS seek_list_remove(72,2096
+seek_list_t *NS_CLASS seek_list_find(101,2596
+void NS_CLASS seek_list_print(116,2864
+
+timer_queue.c,381
+static struct timer *TQ;33,1162
+void NS_CLASS timer_queue_init(42,1302
+void NS_CLASS timer_timeout(48,1396
+NS_STATIC void NS_CLASS timer_add(88,2202
+int NS_CLASS timer_timeout_now(140,3160
+int NS_CLASS timer_remove(172,3680
+void NS_CLASS timer_set_timeout(196,4066
+long timer_left(210,4403
+struct timeval *NS_CLASS timer_age_queue(221,4565
+void NS_CLASS printTQ(245,5025
+
+aodv_hello.h,99
+#define AODV_HELLO_H24,1028
+#define ROUTE_TIMEOUT_SLACK 34,1199
+#define JITTER_INTERVAL 35,1231
+
+aodv_neighbor.h,32
+#define AODV_NEIGHBOR_H24,1031
+
+aodv_rerr.h,360
+#define AODV_RERR_H24,1027
+#define RERR_NODELETE 33,1155
+} RERR;RERR50,1531
+#define RERR_SIZE 52,1540
+} RERR_udest;RERR_udest58,1680
+struct rerr_record rerr_record60,1695
+#define RERR_UDEST_SIZE 67,1825
+#define RERR_CALC_SIZE(RERR_CALC_SIZE71,1961
+#define RERR_UDEST_FIRST(RERR_UDEST_FIRST72,2041
+#define RERR_UDEST_NEXT(RERR_UDEST_NEXT73,2105
+
+aodv_rrep.h,191
+#define AODV_RREP_H24,1027
+#define RREP_REPAIR 33,1155
+#define RREP_ACK 34,1180
+} RREP;RREP58,1713
+#define RREP_SIZE 60,1722
+} RREP_ack;RREP_ack65,1813
+#define RREP_ACK_SIZE 67,1826
+
+aodv_rreq.h,309
+#define AODV_RREQ_H24,1029
+#define RREQ_JOIN 34,1180
+#define RREQ_REPAIR 35,1211
+#define RREQ_GRATUITOUS 36,1242
+#define RREQ_DEST_ONLY 37,1273
+#define RREQ_UNKNOWN_SEQNO 38,1304
+} RREQ;RREQ67,2057
+#define RREQ_SIZE 69,2066
+struct rreq_record rreq_record72,2165
+struct blacklist blacklist79,2348
+
+aodv_socket.h,249
+#define AODV_SOCKET_H24,1029
+#define IPHDR_SIZE 32,1141
+#define AODV_MSG_MAX_SIZE 37,1362
+#define RECV_BUF_SIZE 38,1422
+#define SEND_BUF_SIZE 39,1462
+struct timeval time_last_rreq,44,1557
+struct timeval time_last_rreq, time_last_rerr;44,1557
+
+aodv_timeout.h,31
+#define AODV_TIMEOUT_H24,1030
+
+aodv-uu.h,362
+#define AODV_UU_H24,995
+#define IFQ_BUFFER 27,1076
+#define IFQ_DROP 28,1097
+#define IFQ_DROP_BY_DEST 29,1116
+#define NS_NO_DECLARATIONS60,1911
+class TimerQueueTimer TimerQueueTimer79,2309
+  TimerQueueTimer(TimerQueueTimer::TimerQueueTimer81,2364
+class AODVUU AODVUU90,2533
+#define NS_NO_GLOBALS117,3212
+inline int NS_CLASS ifindex2devindex(212,4996
+
+debug.h,111
+#define DEBUG_H23,1010
+#define DEBUG_OUTPUT53,1674
+#define DEBUG(DEBUG54,1695
+#define DEBUG(DEBUG56,1763
+
+defs.h,1842
+#define DEFS_H23,1009
+#define NS_CLASS 49,1415
+#define NS_OUTSIDE_CLASS 50,1441
+#define NS_STATIC51,1469
+#define NS_INLINE52,1487
+#define NS_DEV_NR 54,1568
+#define NS_IFINDEX 55,1588
+#define NS_CLASS57,1623
+#define NS_OUTSIDE_CLASS58,1640
+#define NS_STATIC 59,1665
+#define NS_INLINE 60,1690
+#define AODV_UU_VERSION 63,1723
+#define DRAFT_VERSION 64,1753
+#define AODV_LOG_PATH_PREFIX 68,1854
+#define AODV_RT_LOG_PATH_PREFIX 69,1894
+#define AODV_LOG_PATH_SUFFIX 70,1940
+#define AODV_RT_LOG_PATH_SUFFIX 71,1976
+#define AODV_LOG_PATH 73,2035
+#define AODV_RT_LOG_PATH 74,2078
+#define max(max77,2152
+#define MINTTL 79,2193
+#define MAX_NR_INTERFACES 81,2254
+#define MAX_IFINDEX 82,2283
+#define IFNAMSIZ 85,2351
+struct dev_info dev_info89,2411
+struct host_info host_info99,2724
+struct host_info this_host;120,3454
+unsigned int dev_indices[123,3516
+static inline int ifindex2devindex(128,3696
+#define DEV_IFINDEX(DEV_IFINDEX143,4013
+#define DEV_NR(DEV_NR144,4086
+#define AODV_BROADCAST 147,4187
+#define AODV_PORT 149,4222
+#define AODV_HELLO 152,4270
+#define AODV_RREQ 153,4341
+#define AODV_RREP 154,4365
+#define AODV_RERR 155,4389
+#define AODV_RREP_ACK 156,4413
+struct AODV_msg AODV_msg160,4498
+    inline static int &offset(offset170,4702
+    inline static AODV_msg *access(access173,4759
+typedef AODV_msg hdr_aodvuu;hdr_aodvuu180,4882
+#define HDR_AODVUU(HDR_AODVUU181,4942
+} AODV_msg;183,5009
+#define RREQ_EXT 187,5056
+#define RREP_EXT 188,5075
+#define RREP_HELLO_INTERVAL_EXT 189,5094
+#define RREP_HELLO_NEIGHBOR_SET_EXT 190,5128
+} AODV_ext;AODV_ext197,5306
+#define AODV_EXT_HDR_SIZE 200,5361
+#define AODV_EXT_DATA(AODV_EXT_DATA201,5404
+#define AODV_EXT_NEXT(AODV_EXT_NEXT202,5479
+#define AODV_EXT_SIZE(AODV_EXT_SIZE203,5568
+typedef void (*callback_func_t)callback_func_t207,5674
+
+endian.h,106
+#define ENDIAN_H2,17
+#define __LITTLE_ENDIAN 3,34
+#define __BIG_ENDIAN 4,63
+#define __BYTE_ORDER 5,92
+
+icmp.h,23
+#define ICMP_H23,1010
+
+k_route.h,26
+#define K_ROUTE_H24,1025
+
+libipq.h,241
+#define _LIBIPQ_H22,681
+typedef u_int64_t ipq_id_t;ipq_id_t35,932
+typedef u_int32_t ipq_id_t;ipq_id_t38,1009
+#define LDEBUG(LDEBUG43,1084
+#define LDEBUG(LDEBUG45,1133
+#define MSG_TRUNC 50,1227
+struct ipq_handle ipq_handle53,1258
+
+link_qual.h,25
+#define LINK_QUAL_H2,20
+
+packet_input.h,31
+#define PACKET_INPUT_H23,1017
+
+packet_queue.h,167
+#define PACKET_QUEUE_H23,1017
+#define MAX_QUEUE_LENGTH 28,1082
+struct q_pkt q_pkt30,1112
+struct packet_queue packet_queue40,1245
+struct packet_queue PQ;49,1399
+
+params.h,763
+#define PARAMS_H24,1024
+#define K 28,1061
+#define ACTIVE_ROUTE_TIMEOUT 31,1122
+#define TTL_START 32,1160
+#define DELETE_PERIOD 33,1194
+#define ACTIVE_ROUTE_TIMEOUT 36,1284
+#define DELETE_PERIOD 37,1321
+#define TTL_START 38,1420
+#define ALLOWED_HELLO_LOSS 41,1462
+#define BLACKLIST_TIMEOUT 43,1566
+#define HELLO_INTERVAL 44,1695
+#define LOCAL_ADD_TTL 45,1732
+#define MAX_REPAIR_TTL 46,1766
+#define MY_ROUTE_TIMEOUT 47,1820
+#define NET_DIAMETER 48,1877
+#define NEXT_HOP_WAIT 49,1912
+#define NODE_TRAVERSAL_TIME 50,1969
+#define NET_TRAVERSAL_TIME 51,2004
+#define PATH_DISCOVERY_TIME 52,2075
+#define RERR_RATELIMIT 53,2130
+#define RREQ_RETRIES 54,2165
+#define RREQ_RATELIMIT 55,2199
+#define TTL_INCREMENT 56,2234
+#define TTL_THRESHOLD 57,2268
+
+routing_table.h,518
+#define ROUTING_TABLE_H24,1031
+typedef struct rt_table rt_table_t;rt_table_t29,1097
+typedef struct precursor precursor32,1189
+} precursor_t;precursor_t35,1268
+typedef u_int32_t hash_value;hash_value38,1285
+struct rt_table rt_table41,1361
+#define UNIDIR 61,2168
+#define LREPAIR 62,2194
+#define INVALID_SEQNO 63,2220
+#define INVALID 66,2272
+#define VALID 67,2292
+#define RT_TABLESIZE 70,2314
+#define RT_TABLEMASK 71,2366
+struct routing_table routing_table73,2407
+struct routing_table rt_tbl;84,2639
+
+seek_list.h,172
+#define SEEK_LIST_H24,1027
+#define IP_DATA_MAX_LEN 30,1114
+struct ip_data ip_data32,1184
+typedef struct seek_list seek_list38,1319
+} seek_list_t;seek_list_t47,1579
+
+timer_queue.h,197
+#define TIMER_QUEUE_H23,1016
+typedef void (*timeout_func_t)timeout_func_t30,1103
+struct timer timer32,1145
+static inline long timeval_diff(45,1343
+static inline int timeval_add_msec(54,1545
