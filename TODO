@@ -1,0 +1,5 @@
+TODO for AODV-UU:
+
+* Local Repair.
+* More robust Internet gateway support.
+* Setting options through a configuration file.
