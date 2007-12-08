@@ -1,0 +1,215 @@
+\documentclass[swedish,10pt,twocolumn]{article}
+
+\usepackage{graphicx}                  
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\usepackage[english]{babel}
+%\usepackage[english]{babel}
+\usepackage{sectsty}
+\usepackage[normalem]{ulem}
+%\usepackage{a4dutch}
+\usepackage{url}
+\usepackage{footnpag}
+\usepackage{fancyhdr}
+\usepackage{pslatex}
+\usepackage{makeidx}
+
+\title{The AODV-UU Implementation}
+
+\author{Erik Nordstr\"om}
+
+\makeindex
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+AODV-UU is an AODV routing protocol implementation developed at
+Uppsala University, Sweden. AODV-UU runs in user space on the Linux
+operating system or in the ns-2\cite{ns-2} simulation environment. 
+
+AODV differs in many respects from traditional routing algorithms by
+incorporating reactive and on-demand properties in the
+protocol. Because of this, AODV-UU has to manage soft state
+information about routes and administrative protocol message exchanges
+between nodes. These functionalities increases the complexity of the
+protocol implementation as, among other things, the user space
+component needs intricate knowledge of information only accessible
+from within kernel space. Some of the areas which makes implementing
+the AODV routing protocol different from traditional routing protocols
+are discussed below.
+
+\subsection{User Space Approach}
+
+
+It will be clear that AODV has several properties that make it
+attractive to implement AODV in kernel space. However, the modern
+Linux kernel provides so many powerful features for doing work in user
+space, that it would be a shame to not exploit them. User space
+programming also has several advantages:
+
+\begin{itemize}
+\item Simplified coding - use libraries and common C network programming
+\item Easily debug code
+\item Better portabilty to other OS:es and simulator environments like ns-2
+\end{itemize}
+
+The disadvantage is speed. AODV-UU performs user space packet
+processing at a speed penalty. However, this penalty has no real world
+effect on applications or the evaluation of the protocol. The main
+purpose of AODV-UU is to test the AODV routing algoritm, not to enable
+mp3 streaming, file downloading or Quake deathmatches over ad-hoc
+networks, although all this is possible.
+
+\section{Implementation Challenges}
+
+\subsection{Routing Tables}
+
+AODV-UU is a routing protocol, and therefore manages routing
+tables. AODV needs to keep lots of information in the routing table
+that are not available in the kernel's IP routing table. To solve this
+problem, AODV-UU manages its own routing table in user space. The
+AODV-UU routing table and the kernel's routing table are always kept
+synchronized, and the kernel routing table is strictly used for IP
+route resolving once AODV-UU has had a chance to initate its own route
+resolve routines.
+
+The AODV-UU routing table and related management routines are defined
+and implemented in {\tt routing\_table.h} and {\tt routing\_table.c}.
+
+\subsection{IP Route Resolving Mechanism}
+
+Normally, when a packet is about to be sent, the route resolve procedure
+for IP is to examine the kernel internal routing table for a matching
+entry for the IP address of the requested destination. If a matching
+entry is found, the packet is sent to the next hop (or gateway) as
+indicated by that entry. If there is no match, but there is an entry
+matching the subnet of the sender, the routing code assumes that the
+node is on a broadcast network (typically a LAN), and sends the packet
+directly to the destination. As a last resort, the packet might be
+sent to a default gateway, if such an entry exists in the routing
+table.
+
+If IP fails to find a matching route entry, a ``Network is unreachable''
+message is returned. In the case there is a matching subnet entry, but
+the host is not available on the local network, the Address Resolution
+Protocol (ARP), which resolvs IP-to-Link Layer address mappings will
+eventually generate ``Destination Host Unreachable'' ICMP messages to
+the application requesting the destination. This will often lead to
+the termination of the request.
+
+\subsection{On-demand Route Discovery}
+
+AODV discovers routes on demand. Therefore, AODV-UU needs to intercept
+any packets to a destination for which there is no route, so that the
+packets can be buffered, while a route request packet (RREQ) is
+disseminated. If packets are not intercepted, and allowed to continue
+their traversal of the networking stack, they will eventually generate
+any of the above described error messages, which can be fatal for
+connection oriented protocols, like TCP.
+
+\subsection{Routing Table Soft State}
+
+In AODV, routing table entries are only valid as long as they are being used,
+i.e. as long as there is traffic being forwarded. To facilitate this
+functionality, AODV-UU needs to monitor the packet flow, so that route
+utilization records can be kept. Whenever packets have not been sent
+along a route for a defined period of time, the route entry should be
+invalidated. This is to make sure AODV does not keep stale routing
+table information.
+
+\section{The Linux Netfilter Framework}
+
+AODV-UU uses the Linux Netfilter framework to be able to manage the
+intricate interaction with the packet flow of the networking
+stack. Netfilter is native to the Linux kernel v2.4 and provides the
+ability to perform advanced packet filtering and mangling, typically
+to enable Linux to act as a firewall. Netfilter provides well defined
+hooks in the kernel's networking stack. At these points, custom
+intermediate code segments, which have the ability to drop, overtake
+or change packets, can be inserted. 
+
+\subsection{AODV-UU's Netfilter Kernel Module}
+\index{kaodv.c}
+
+AODV-UU has the {\tt kaodv.c} kernel module code to hook into the
+kernel's networking stack at netfilter defined locations. All network
+interface inbound packets or packets generated locally by applications
+are redirected to this ``kaodv'' code. Packets which are ``captured''
+are at this point queued for processing in user space, by means of
+another Netfilter functionality (ip\_queue). Using a so called Netlink
+socket, either the whole packet or just parts of packets
+(i.e. headers) are sent to user space, so that a decision on what to
+do with the packet can be taken. A verdict for the packet is returned
+on the netlink socket, once the user space packet processing code has
+finished.
+
+\subsection{Route Discovery}
+\index{packet\_input()}
+\index{packet\_input.c}
+\index{icmp.c}
+
+In the AODV-UU case, data packets are sent to user space by the
+``kaodv'' kernel module and received by the function {\tt
+packet\_input()} in {\tt packet\_input.c}. In this code, route
+utilization records can be updated, and a route discovery procedure
+can be initiated if there is no destination entry in AODV-UU's
+internal routing table. If a route discovery fails, the application
+initiating the route discovery is notified via an ICMP message. ICMP
+code is implemented in {\tt icmp.c}.
+
+\subsubsection{Packet Buffering}
+\index{packet\_queue()}
+\index{packet\_queue.c}
+
+In case AODV-UU needs to initiate a route discovery, pending data
+packets for the sought destination should be buffered. AODV-UU
+implements a packet queue in {\tt packet\_queue.c}. In reality, only
+Netfilter id's of packets are stored in this queue (ns packets in the
+ns case), while the real data packets are queued in kernel space by
+the {\tt ip\_queue.o} Netfilter module. The packet queue implements
+garbage collection of old packets and a queue limit. Parameters for
+this functionality can be found and tweaked in {\tt packet\_queue.h}.
+
+\section{Event handling}
+The main loop of the AODV-UU implementation is based around a
+non-blocking {\tt select()} call. This function will listen on a set
+of file descriptors for readable characters. In the AODV-UU case,
+there are the netlink socket used to communicate with the kernel's
+netfilter functionality and one AODV socket for each interface
+listening for packets on port 654.
+
+\subsection{AODV-UU timer queue}
+\index{timer\_queue.c} 
+
+AODV-UU uses a timer queue to scheduale timeout events, i.e. routing
+table entruies that are to expire, black-list sets to be emptied and
+so on. This is implemented in {\tt timer\_queue.c} as list of timer
+structs ordered by their time of expire. The timer stucts contain a
+pointer to a function to call when the timer expires along with a
+pointer to data to pass to that function. 
+
+The queue is aged by passing the expire time of the first timer to the
+main loops {\tt select()} call. The {\tt select()} is set to timeout
+at this time and will do so unless there are information waiting to be
+read on the sockets and file descriptors it is watching before the
+timeout. In that case the information will be read and a new timeout
+is scheduled for {\tt select()} with the remaining time until the
+timeout.
+
+\begin{thebibliography}
+\small
+\def\newblock{}
+
+\bibitem{ns-2}
+\textsc{The Network Simulator - ns-2:}
+\newblock \url{http://www.isi.edu/nsnam/ns/}
+\end{thebibliography}
+
+\printindex
+
+\end{document}
