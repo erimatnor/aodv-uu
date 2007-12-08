@@ -1,0 +1,386 @@
+
+aodv_hello.c,158
+void hello_send(40,1364
+void hello_process(71,2230
+void hello_process_non_hello(128,3996
+#define HELLO_DELAY 162,4863
+void hello_update_timeout(166,5044
+
+aodv_rerr.c,83
+RERR *rerr_create(31,1167
+void rerr_add_udest(50,1573
+void rerr_process(60,1823
+
+aodv_rrep.c,154
+RREP *rrep_create(37,1311
+RREP_ack *rrep_ack_create(67,1966
+void rrep_ack_process(78,2192
+void rrep_process(102,2749
+int rrep_add_hello_ext(261,8196
+
+aodv_rreq.c,581
+static struct rreq_record *rreq_flood_record_head 37,1329
+static struct blacklist *rreq_blacklist_head 41,1562
+RREQ *rreq_create(46,1713
+void rreq_process(88,2990
+void rreq_route_discovery(366,12334
+int rreq_add_max_delay_ext(432,14471
+int rreq_add_min_bdwth_ext(445,14859
+static struct rreq_record *rreq_flood_record_insert(457,15172
+static struct rreq_record *rreq_flood_record_find(487,16102
+int rreq_flood_record_remove(502,16435
+struct blacklist *rreq_blacklist_insert(526,16978
+struct blacklist *rreq_blacklist_find(549,17658
+int rreq_blacklist_remove(561,17916
+
+aodv_socket.c,443
+#define AODV_MSG_MAX_SIZE 45,1631
+#define RECV_BUF_SIZE 46,1691
+#define SEND_BUF_SIZE 47,1731
+#define SO_RECVBUF_SIZE 48,1767
+static int aodv_socket;49,1800
+static char recv_buf[50,1866
+static char send_buf[51,1903
+void aodv_socket_init(55,1980
+static void aodv_socket_read(131,3985
+void aodv_socket_send(262,7838
+AODV_msg *aodv_socket_new_msg(317,9511
+AODV_msg *aodv_socket_queue_msg(346,10283
+void aodv_socket_cleanup(356,10565
+
+aodv_timeout.c,250
+void route_discovery_timeout(43,1467
+void route_expire_timeout(103,3262
+void route_delete_timeout(180,5738
+void hello_timeout(201,6279
+void rreq_flood_record_timeout(217,6583
+void rreq_blacklist_timeout(232,6990
+void rrep_ack_timeout(242,7267
+
+debug.c,402
+int log_file_fd 43,1452
+int log_rt_fd 44,1474
+int log_nmsgs 45,1494
+int debug 46,1513
+void log_init(48,1530
+void log_cleanup(62,1997
+void write_to_log_file(69,2164
+char *packet_type(82,2501
+void log(98,2790
+char *rreq_flags_to_str(164,4392
+char *rrep_flags_to_str(187,4733
+void log_pkt_fields(206,5003
+char *rt_flags_to_str(237,6058
+void print_rt_table(264,6446
+char *ip_to_str(320,8540
+
+ip_queue_aodv.c,1721
+#define IPQ_QMAX_DEFAULT 32,914
+#define IPQ_PROC_FS_NAME 33,944
+#define NET_IPQ_QMAX 34,980
+#define NET_IPQ_QMAX_NAME 35,1006
+typedef struct ipq_rt_info ipq_rt_info37,1051
+} ipq_rt_info_t;ipq_rt_info_t41,1119
+typedef struct ipq_queue_element ipq_queue_element43,1137
+} ipq_queue_element_t;ipq_queue_element_t49,1425
+typedef int (*ipq_send_cb_t)ipq_send_cb_t51,1449
+typedef struct ipq_peer ipq_peer53,1504
+} ipq_peer_t;ipq_peer_t59,1804
+typedef struct ipq_queue ipq_queue61,1819
+} ipq_queue_t;ipq_queue_t69,2195
+ipq_dequeue(78,2498
+static void ipq_flush(100,2963
+static ipq_queue_t *ipq_create_queue(117,3297
+static int ipq_enqueue(150,4021
+static void ipq_destroy_queue(209,5391
+static int route_me_harder(220,5603
+static int ipq_mangle_ipv4(245,6118
+static inline int id_cmp(295,7405
+static int ipq_set_verdict(300,7512
+static int ipq_receive_peer(324,8074
+static inline int dev_cmp(369,9118
+static void ipq_dev_drop(381,9422
+static int netfilter_receive(402,9976
+static struct sock *nfnl 414,10333
+ipq_queue_t *nlq 415,10366
+static struct sk_buff *netlink_build_message(417,10392
+static int netlink_send_peer(485,12219
+#define RCV_SKB_FAIL(RCV_SKB_FAIL496,12459
+static __inline__ void netlink_receive_user_skb(498,12542
+static void netlink_receive_user_sk(542,13843
+static int receive_event(563,14339
+struct notifier_block ipq_dev_notifier 574,14628
+static int sysctl_maxlen 586,14891
+static struct ctl_table_header *ipq_sysctl_header;588,14937
+static ctl_table ipq_table[590,14989
+static ctl_table ipq_dir_table[596,15142
+static ctl_table ipq_root_table[601,15252
+static int ipq_get_info(612,15557
+static int __init init(650,16636
+static void __exit fini(681,17528
+
+kaodv.c,285
+#define MODVERSIONS26,1106
+static struct nf_hook_ops nf_hook1,53,1680
+static struct nf_hook_ops nf_hook1, nf_hook2;53,1680
+static struct nf_hook_ops nf_hook3;56,1747
+char *ifname 58,1790
+unsigned int netfilter_hook(60,1814
+int init_module(126,3824
+void cleanup_module(175,5131
+
+k_route.c,95
+int k_add_rte(43,1441
+int k_del_rte(117,2934
+int k_chg_rte(181,4393
+int k_del_arp(194,4620
+
+libipq.c,1023
+	IPQ_ERR_NONE 41,1096
+	IPQ_ERR_IMPL,42,1115
+	IPQ_ERR_HANDLE,43,1130
+	IPQ_ERR_SOCKET,44,1147
+	IPQ_ERR_BIND,45,1164
+	IPQ_ERR_BUFFER,46,1179
+	IPQ_ERR_RECV,47,1196
+	IPQ_ERR_NLEOF,48,1211
+	IPQ_ERR_ADDRLEN,49,1227
+	IPQ_ERR_STRUNC,50,1245
+	IPQ_ERR_RTRUNC,51,1262
+	IPQ_ERR_NLRECV,52,1279
+	IPQ_ERR_SEND,53,1296
+	IPQ_ERR_SUPP,54,1311
+	IPQ_ERR_RECVBUF,55,1326
+	IPQ_ERR_TIMEOUT56,1344
+#define IPQ_MAXERR 58,1364
+struct ipq_errmap_t ipq_errmap_t60,1400
+} ipq_errmap[63,1452
+static int ipq_errno 82,2264
+static ssize_t ipq_netlink_sendto(97,2834
+static ssize_t ipq_netlink_sendmsg(107,3134
+static ssize_t ipq_netlink_recvfrom(117,3421
+static char *ipq_strerror(182,4800
+struct ipq_handle *ipq_create_handle(199,5207
+int ipq_destroy_handle(239,6191
+int ipq_set_mode(248,6292
+ssize_t ipq_read(270,6853
+int ipq_message_type(276,7017
+int ipq_get_msgerr(281,7114
+ipq_packet_msg_t *ipq_get_packet(288,7288
+int ipq_set_verdict(293,7398
+int ipq_ctl(338,8522
+char *ipq_errstr(343,8596
+void ipq_perror(348,8657
+
+main.c,648
+#define AODV_UU_VERSION 44,1489
+int log_to_file 47,1546
+int log_rt_table 48,1567
+int rt_log_interval 49,1589
+int unidir_hack 50,1659
+int rreq_gratuitous 51,1680
+char *progname;52,1705
+char versionstring[53,1721
+void print_usage(57,1771
+int set_kernel_options(69,2334
+struct sockaddr_in *get_if_info(116,3501
+#define CALLBACK_FUNCS 138,4077
+static struct callback callback139,4102
+} callbacks[142,4161
+static int nr_callbacks 144,4191
+int attach_callback_func(146,4221
+void load_modules(161,4664
+void remove_modules(200,5636
+void host_init(206,5830
+void signal_handler(297,8519
+int main 308,8646
+static void cleanup(458,12047
+
+packet_input.c,433
+#define BUFSIZE 36,1290
+static struct ipq_handle *h;38,1312
+static void die(46,1500
+void packet_input_cleanup(52,1604
+void packet_input_init(56,1647
+static void packet_input(75,1995
+struct pkt_buff pkt_buff158,4485
+struct pkt_buff *pkt_buff_head 164,4570
+struct pkt_buff *pkt_buff_tail 165,4609
+void packet_buff_add(169,4786
+void packet_buff_destroy(193,5334
+int packet_buff_drop(211,5696
+int packet_buff_send(247,6454
+
+routing_table.c,637
+int total_entries 38,1470
+void rt_table_init(40,1494
+int flush_rt_cache(50,1815
+void rt_table_destroy(66,2104
+unsigned int hashing(97,2906
+rt_table_t *rt_table_insert(105,3058
+rt_table_t* rt_table_update(178,4994
+void rt_table_insert_neighbor(225,6548
+rt_table_t *rt_table_update_timeout(232,6731
+rt_table_t *rt_table_find_active(243,7109
+rt_table_t *rt_table_find(254,7298
+int rt_table_is_next_hop(279,7801
+int rt_table_invalidate(292,8142
+void rt_table_delete(356,10160
+static void rt_table_remove_precursor(398,11102
+void precursor_add(424,11906
+void precursor_remove(456,12817
+void precursor_list_destroy(490,13602
+
+seek_list.c,150
+static seek_list_t *seek_list_head 34,1275
+seek_list_t *seek_list_insert(36,1319
+int seek_list_remove(57,1807
+seek_list_t *seek_list_find(83,2268
+
+timer_queue.c,589
+static u_int32_t id;31,1179
+static struct timer *TQ;33,1303
+int timer_fds[34,1328
+static sigset_t blockset,38,1475
+static sigset_t blockset, oldset;38,1475
+u_int64_t get_currtime(46,1596
+u_int64_t timeval_to_msecs(57,1811
+void timer_block(60,1934
+void timer_unblock(68,2190
+void timer_queue_init(74,2314
+void timer_timeout(85,2571
+u_int32_t timer_new(139,3718
+int timer_timeout_now(205,5240
+struct timer *timer_find(241,5962
+u_int64_t timer_left(259,6184
+int timer_remove(276,6424
+u_int64_t timer_next_timeout(305,6949
+int timer_set_alarm(316,7144
+void printTQ(358,8194
+
+aodv_hello.h,29
+#define AODV_HELLO_H24,1050
+
+aodv_rerr.h,220
+#define AODV_RERR_H24,1049
+#define RERR_NODELETE 30,1134
+} RERR;RERR39,1326
+#define RERR_SIZE 41,1335
+} RERR_udest;RERR_udest47,1481
+#define RERR_UDEST_SIZE 49,1496
+#define RERR_CALC_SIZE(RERR_CALC_SIZE53,1632
+
+aodv_rrep.h,191
+#define AODV_RREP_H24,1049
+#define RREP_REPAIR 29,1107
+#define RREP_ACK 30,1132
+} RREP;RREP42,1380
+#define RREP_SIZE 44,1389
+} RREP_ack;RREP_ack49,1476
+#define RREP_ACK_SIZE 51,1489
+
+aodv_rreq.h,241
+#define AODV_RREQ_H24,1073
+#define RREQ_JOIN 29,1131
+#define RREQ_REPAIR 30,1159
+#define RREQ_GRATUITOUS 31,1187
+} RREQ;RREQ44,1443
+#define RREQ_SIZE 46,1452
+struct rreq_record rreq_record50,1552
+struct blacklist blacklist57,1718
+
+aodv_socket.h,85
+#define AODV_SOCKET_H24,1051
+#define AODV_PORT 30,1118
+#define IPHDR_SIZE 32,1141
+
+aodv_timeout.h,31
+#define AODV_TIMEOUT_H24,1052
+
+debug.h,24
+#define DEBUG_H24,1045
+
+defs.h,666
+#define DEFS_H24,1044
+#define INFTY 41,1362
+#define IS_INFTY(IS_INFTY42,1381
+#define MINTTL 44,1433
+struct local_host_info local_host_info46,1494
+struct local_host_info *this_host;58,1923
+#define AODV_BROADCAST 61,2021
+#define AODV_HELLO 64,2081
+#define AODV_RREQ 65,2151
+#define AODV_RREP 66,2175
+#define AODV_RERR 67,2199
+#define AODV_RREP_ACK 68,2223
+} AODV_msg;AODV_msg73,2327
+#define RREP_HELLO_EXT 76,2367
+#define RREQ_MAX_DELAY_EXT 77,2396
+#define RREQ_MIN_BDWTH_EXT 78,2425
+} AODV_ext;AODV_ext84,2548
+#define AODV_EXT_HDR_SIZE 86,2561
+#define AODV_EXT_DATA(AODV_EXT_DATA87,2604
+typedef void (*callback_func_t)callback_func_t90,2687
+
+k_route.h,26
+#define K_ROUTE_H24,1047
+
+libipq.h,240
+#define _LIBIPQ_H22,681
+typedef u_int64_t ipq_id_t;ipq_id_t35,932
+typedef u_int32_t ipq_id_t;ipq_id_t38,1009
+#define LDEBUG(LDEBUG43,1084
+#define LDEBUG(LDEBUG45,1133
+#define MSG_TRUNC 50,1224
+struct ipq_handleipq_handle53,1255
+
+packet_input.h,31
+#define PACKET_INPUT_H24,1052
+
+params.h,658
+#define PARAMS_H24,1046
+#define max(max26,1064
+#define K 28,1105
+#define ACTIVE_ROUTE_TIMEOUT 31,1179
+#define ALLOWED_HELLO_LOSS 32,1216
+#define BLACKLIST_TIMEOUT 34,1320
+#define FLOOD_RECORD_TIME 35,1447
+#define DELETE_PERIOD 36,1502
+#define HELLO_INTERVAL 37,1601
+#define LOCAL_ADD_TTL 38,1638
+#define MAX_REPAIR_TTL 39,1672
+#define MY_ROUTE_TIMEOUT 40,1723
+#define NET_DIAMETER 41,1780
+#define NEXT_HOP_WAIT 42,1815
+#define NODE_TRAVERSAL_TIME 43,1872
+#define REV_ROUTE_LIFE 44,1907
+#define NET_TRAVERSAL_TIME 45,1958
+#define RREQ_RETRIES 46,2033
+#define TTL_START 49,2184
+#define TTL_INCREMENT 50,2218
+#define TTL_THRESHOLD 51,2252
+
+routing_table.h,434
+#define ROUTING_TABLE_H24,1053
+typedef struct precursor precursor30,1155
+} precursor_t;precursor_t33,1239
+typedef u_int32_t hash_value;hash_value36,1256
+typedef struct rt_table rt_table39,1332
+} rt_table_t;rt_table_t56,2270
+#define REV_ROUTE 60,2310
+#define FWD_ROUTE 61,2332
+#define NEIGHBOR 62,2354
+#define UNIDIR 63,2376
+#define RT_TABLESIZE 68,2440
+#define RT_TABLEMASK 69,2491
+rt_table_t *routing_table[71,2532
+
+seek_list.h,107
+#define SEEK_LIST_H24,1049
+typedef struct seek_list seek_list29,1158
+} seek_list_t;seek_list_t35,1275
+
+timer_queue.h,112
+#define TIMER_QUEUE_H24,1051
+typedef void (*timeout_func_t)timeout_func_t28,1093
+struct timer timer31,1168

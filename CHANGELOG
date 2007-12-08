@@ -1,0 +1,28 @@
+0.1:
+* Initial release.
+
+0.2:
+* Fixed byte order problems in some headers.
+* Corrected sequence number handling.
+* Wait on reboot (DELETE_PERIOD).
+* Draft 10 compliance.
+* Gratuitous flag in RREQ for ICMP ECHO requests.
+* Show node's own sequence number in routing table log.
+* Made expanding ring search optional.
+* ICMP Destination Host Unreachable to application on route lookup failure.
+* Fixed pointer error in seek_list.c which caused seg-faults.
+* Experimental Internet gateway support (more like a bad hack ;-).
+* Fixed bugs when there was a hashing conflict in the routing table.
+* Experimental support for receiving N hellos before treating a node as 
+  a neighbor.
+
+0.3:
+* New timer code to fix obscure crashes (very stable now).
+* Multiple network interfaces support.
+* Fixed bug which caused some RERRs to not be sent.
+* HELLO message jittering.
+* Code is AODV-interop tested and verified.
+* Updated README.
+* New command line parsing, and options.
+* Added command line option to disable wait on reboot (maybe Manel
+  will stop whining about the 15 secs delay now ;-).
