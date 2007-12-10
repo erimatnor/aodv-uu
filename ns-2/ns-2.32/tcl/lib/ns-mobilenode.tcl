@@ -948,16 +948,14 @@ Node/MobileNode/AODVNode instproc init args {
 	# The target of the routing agent is the address classifier
 	$ragent target $classifier_
 
-       # $classifier_ bcast-receiver $dmux_
-
 	###########################################
 	# Set up targets in the address classifier:
 
 	# Make the node's own address to point to the port demuxer
 	$self add-route $address_ $dmux_
 
-	# Should add broadcast address here:
-	#$self add-route 0xFFFFFFFF $dmux_
+	# Add broadcast address here (does this work?):
+	$self add-route [AddrParams set ALL_BITS_SET] $dmux_
 
 	# I do not understand the classifier setup in Mobilenode.
 	# What is the point of a classifier if the default target is
