@@ -23,7 +23,7 @@
 #include <time.h>
 
 #ifdef NS_PORT
-#include "ns/aodv-uu.h"
+#include "ns-2/aodv-uu.h"
 #else
 #include "routing_table.h"
 #include "aodv_timeout.h"

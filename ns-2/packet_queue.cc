@@ -97,7 +97,7 @@ void NS_CLASS packet_queue_add(Packet * p, struct in_addr dest_addr)
     
     ih = HDR_IP(p);
     
-    assert(ih->daddr() == dest_addr.s_addr);
+    assert((unsigned int)ih->daddr() == dest_addr.s_addr);
 
     if (PQ.len >= MAX_QUEUE_LENGTH) {
 	DEBUG(LOG_DEBUG, 0, "MAX Queue length! Removing first packet.");

@@ -23,7 +23,7 @@
 #include <stdlib.h>
 
 #ifdef NS_PORT
-#include "ns/aodv-uu.h"
+#include "ns-2/aodv-uu.h"
 #include "list.h"
 #else
 #include "seek_list.h"

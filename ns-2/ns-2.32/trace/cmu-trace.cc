@@ -52,7 +52,7 @@
 #include <imep/imep_spec.h>         // IMEP
 #include <aodv/aodv_packet.h> //AODV
 #ifdef AODV_UU
-#include <aodv-uu/ns/aodv-uu.h> // AODV-UU
+#include <aodv-uu/ns-2/aodv-uu.h> // AODV-UU
 #endif /* AODV_UU */
 #include <cmu-trace.h>
 #include <mobilenode.h>

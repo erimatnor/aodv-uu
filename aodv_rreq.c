@@ -22,7 +22,7 @@
  *****************************************************************************/
 
 #ifdef NS_PORT
-#include "ns/aodv-uu.h"
+#include "ns-2/aodv-uu.h"
 #else
 #include <netinet/in.h>
 
@@ -189,8 +189,9 @@ void NS_CLASS rreq_process(RREQ * rreq, int rreqlen, struct in_addr ip_src,
     if (rreq_orig.s_addr == DEV_IFINDEX(ifindex).ipaddr.s_addr)
 	return;
 
-    DEBUG(LOG_DEBUG, 0, "ip_src=%s rreq_orig=%s rreq_dest=%s",
-	  ip_to_str(ip_src), ip_to_str(rreq_orig), ip_to_str(rreq_dest));
+    DEBUG(LOG_DEBUG, 0, "ip_src=%s rreq_orig=%s rreq_dest=%s ttl=%d",
+	  ip_to_str(ip_src), ip_to_str(rreq_orig), ip_to_str(rreq_dest), 
+	  ip_ttl);
 
     if (rreqlen < (int) RREQ_SIZE) {
 	alog(LOG_WARNING, 0,

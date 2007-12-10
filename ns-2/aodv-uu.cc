@@ -412,6 +412,9 @@ void NS_CLASS sendPacket(Packet *p, struct in_addr next_hop, double delay)
 			drop(p, DROP_RTR_TTL);
 			return;
 		}
+		// Change direction of forwarded packet
+		ch->direction() = hdr_cmn::DOWN;
+		
 	} else if (ch->direction() == hdr_cmn::DOWN && 
 		   src_addr.s_addr == DEV_IFINDEX(ifindex).ipaddr.s_addr) {
 		// Seems like we are originating this packet. Nothing
@@ -576,7 +579,7 @@ Packet *NS_CLASS pkt_encapsulate(Packet *p, struct in_addr gw_addr) {
 #define MIN_ENC_OVERHEAD 8
 
 	ch_e->ptype() = PT_ENCAPSULATED;
-	ch_e->size() = ch_p->size() + IP_HDR_LEN + MIN_ENC_OVERHEAD;
+	ch_e->size() = ch_p->size() + MIN_ENC_OVERHEAD;
 	ch_e->timestamp() = ch_p->timestamp();
     
 	struct hdr_ip *ih_e = HDR_IP(ep);

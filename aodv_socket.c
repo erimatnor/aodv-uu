@@ -23,7 +23,7 @@
 #include <sys/types.h>
 
 #ifdef NS_PORT
-#include "ns/aodv-uu.h"
+#include "ns-2/aodv-uu.h"
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -416,7 +416,7 @@ void NS_CLASS aodv_socket_send(AODV_msg * aodv_msg, struct in_addr dst,
     // Set common header fields
     ch->ptype() = PT_AODVUU;
     ch->direction() = hdr_cmn::DOWN;
-    ch->size() += len;
+    ch->size() += len + IP_HDR_LEN;
     ch->iface() = -2;
     ch->error() = 0;
     ch->prev_hop_ = (nsaddr_t) dev->ipaddr.s_addr;

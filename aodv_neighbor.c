@@ -21,7 +21,7 @@
  *****************************************************************************/
 
 #ifdef NS_PORT
-#include "ns/aodv-uu.h"
+#include "ns-2/aodv-uu.h"
 #else
 #include "aodv_neighbor.h"
 #include "aodv_rerr.h"

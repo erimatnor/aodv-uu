@@ -32,7 +32,7 @@ extern struct timer worb_timer;
 void NS_CLASS processPacket(Packet * p)
 {
     rt_table_t *fwd_rt, *rev_rt;
-    struct in_addr dest_addr, src_addr;
+    struct in_addr dest_addr, src_addr, prev_hop;
     u_int8_t rreq_flags = 0;
     struct ip_data *ipd = NULL;
     int pkt_flags = 0;
@@ -44,6 +44,7 @@ void NS_CLASS processPacket(Packet * p)
 
     src_addr.s_addr = ih->saddr();
     dest_addr.s_addr = ih->daddr();
+    prev_hop.s_addr = ch->prev_hop_;
 
     if (ch->direction() == hdr_cmn::NONE) {
 	    DEBUG(LOG_DEBUG, 0,
@@ -51,8 +52,20 @@ void NS_CLASS processPacket(Packet * p)
 		  ip_to_str(src_addr), ip_to_str(dest_addr));
 	    drop(p);
 	    return;
+    } 
+#if DEBUG_PACKET
+    if (ch->direction() == hdr_cmn::DOWN) {
+	    DEBUG(LOG_DEBUG, 0,
+		  "Packet DOWN src=%s dst=%s prev_hop=%s", 
+		  ip_to_str(src_addr), ip_to_str(dest_addr), 
+		  ip_to_str(prev_hop));
+    } else if (ch->direction() == hdr_cmn::UP) {
+	    DEBUG(LOG_DEBUG, 0,
+		  "Packet UP src=%s dst=%s prev_hop=%s", 
+		  ip_to_str(src_addr), ip_to_str(dest_addr), 
+		  ip_to_str(prev_hop));
     }
-
+#endif
     /* If this is a TCP packet and we don't have a route, we should
        set the gratuituos flag in the RREQ. */
     if (ch->ptype() == PT_TCP) {
@@ -66,7 +79,8 @@ void NS_CLASS processPacket(Packet * p)
 	    
 	    DEBUG(LOG_DEBUG, 0,
 		  "Broadcast packet src=%s dst=%s prev_hop=%s", 
-		  ip_to_str(src_addr), ip_to_str(dest_addr), ch->prev_hop_);
+		  ip_to_str(src_addr), ip_to_str(dest_addr), 
+		  ip_to_str(prev_hop));
 	    
 	    if (ch->direction() == hdr_cmn::DOWN)
 		    sendPacket(p, dest_addr, 0.0);
@@ -119,7 +133,7 @@ void NS_CLASS processPacket(Packet * p)
 	
 	ch->size() -= IP_HDR_LEN;    // cut off IP header size 4/7/99 -dam
 	target_->recv(p, (Handler*)0);
-	p = 0;
+	p = NULL;
 	return;
 
     }

@@ -889,23 +889,38 @@ SRNodeNew instproc reset args {
 }
 ##############################################################################
 # A MobileNode Class for AODV which is modeled after the SRNode Class
-# but with modifications.
+# but with modifications.  The reason for this AODVNode class is that
+# in the normal MobileNode class, the packets destined for the node
+# itself is passed directly to the application source/sink. (See the
+# figure of the MobileNode in the ns-2 manual). This is because the
+# classifier sits before the routing module. This is fine for
+# proactive protocols, but not for on-demand protocols.
+#
+# The problem for AODV is that the source and destination nodes cannot
+# monitor the packet flow when the packets are passed directly to the
+# application sink. Hence, the routes cannot be refreshed at the
+# destination node. This is probably a "bug" in the native ns-2
+# implementation of AODV and something that the creators of that
+# implementation are unaware of.
+#
 ##############################################################################
 Class Node/MobileNode/AODVNode -superclass Node/MobileNode
 
 Node/MobileNode/AODVNode instproc init args {
-	$self instvar ragent_ dmux_ classifier_ entry_point_ address_
+	$self instvar ragent_ entry_point_ dmux_ address_
 
         set ns [Simulator instance]
 
 	eval $self next $args	;# parent class constructor
 
-	set ragent_ [new Agent/AODVUU [$self id ]]
+	set ragent [new Agent/AODVUU [$self id ]]
 
 	# setup address (supports hier-address) for AODV agent
 	$self addr $address_
-	$ragent_ addr $address_
-	$ragent_ node $self
+	$ragent addr $address_
+	$ragent node $self
+
+	$self set ragent_ $ragent
 
 	# Set the routing agent as the entry point of the node
 	if { [Simulator set RouterTrace_] == "ON" } {
@@ -918,29 +933,31 @@ Node/MobileNode/AODVNode instproc init args {
 		$rcvT target $ragent_
 		set entry_point_ $rcvT	
 	} else {
-		# Recv Target
 		set entry_point_ $ragent_
 	}
 
-	$self set ragent_ $ragent_
-
 	###########################################
 	# Setup classifier and port demuxer
-		
-	# The target of the routing agent is the address classifier
-	$ragent_ target $classifier_
+	$self instvar classifier_
 
 	if {$dmux_ == "" } {
 		# Use the default mash and shift
 		set dmux_ [new Classifier/Port]
 	}
 
+	# The target of the routing agent is the address classifier
+	$ragent target $classifier_
+
+       # $classifier_ bcast-receiver $dmux_
+
 	###########################################
 	# Set up targets in the address classifier:
-	
+
 	# Make the node's own address to point to the port demuxer
 	$self add-route $address_ $dmux_
-	$self add-route 0xFFFFFFFF $dmux_
+
+	# Should add broadcast address here:
+	#$self add-route 0xFFFFFFFF $dmux_
 
 	# I do not understand the classifier setup in Mobilenode.
 	# What is the point of a classifier if the default target is

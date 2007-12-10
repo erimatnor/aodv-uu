@@ -1,5 +1,6 @@
 # Makefile
 AODVDIR=$(shell pwd)
+NS_DIR=ns-2
 
 SRC =	main.c list.c debug.c timer_queue.c aodv_socket.c aodv_hello.c \
 	aodv_neighbor.c aodv_timeout.c routing_table.c seek_list.c \
@@ -9,7 +10,7 @@ SRC_NS = 	debug.c list.c timer_queue.c aodv_socket.c aodv_hello.c \
 		aodv_neighbor.c aodv_timeout.c routing_table.c seek_list.c \
 		aodv_rreq.c aodv_rrep.c aodv_rerr.c
 
-SRC_NS_CPP =	ns/aodv-uu.cc ns/packet_queue.cc ns/packet_input.cc
+SRC_NS_CPP =	$(NS_DIR)/aodv-uu.cc $(NS_DIR)/packet_queue.cc $(NS_DIR)/packet_input.cc
 
 OBJS =	$(SRC:%.c=%.o)
 OBJS_ARM = $(SRC:%.c=%-arm.o)
@@ -165,7 +166,7 @@ uninstall:
 docs:
 	cd docs && $(MAKE) all
 clean: 
-	rm -f aodvd *~ *.o core *.log $(NS_TARGET) kaodv.ko endian endian.h ns/*.o ns/*~
+	rm -f aodvd *~ *.o core *.log $(NS_TARGET) kaodv.ko endian endian.h $(NS_DIR)/*.o $(NS_DIR)/*~
 	cd lnx && $(MAKE) clean
 #cd docs && $(MAKE) clean
 
