@@ -1,0 +1,97 @@
+0.1:
+* Initial release.
+
+0.2:
+* Fixed byte order problems in some headers.
+* Corrected sequence number handling.
+* Wait on reboot (DELETE_PERIOD).
+* Draft 10 compliance.
+* Gratuitous flag in RREQ for ICMP ECHO requests.
+* Show node's own sequence number in routing table log.
+* Made expanding ring search optional.
+* ICMP Destination Host Unreachable to application on route lookup failure.
+* Fixed pointer error in seek_list.c which caused seg-faults.
+* Experimental Internet gateway support (more like a bad hack ;-).
+* Fixed bugs when there was a hashing conflict in the routing table.
+* Experimental support for receiving N hellos before treating a node as 
+  a neighbor.
+
+0.3:
+* New timer code to fix obscure crashes (very stable now).
+* Multiple network interfaces support.
+* Fixed bug which caused some RERRs to not be sent.
+* HELLO message jittering.
+* Code is AODV-interop tested and verified.
+* Updated README.
+* New command line parsing, and options.
+* Added command line option to disable wait on reboot (maybe Manel
+  will stop whining about the 15 secs delay now ;-).
+
+0.4:
+* Fixed inconsistency in "--no-worb" option (was --disable-worb in --help).
+* Fixes/changes for unidir and n-hello modes.
+* Removed dependency on modified ip_queue kernel module. Now packets are 
+  re-routed on the NF_IP_POST_ROUTING hook instead.
+* Removed use of skb->protocol to detect IP packets in netfilter
+  code. Apparently skb->protocol is not always set. This caused much
+  grief, since some packets were not being processed by AODV.
+* Fixed bug in RERR-code which made routes be invalidated twice.
+* Fixed bug when TTL_START was set to last_hcnt=255 when doing RREQs.
+* Squashed bug in packet_input.c which made routes not timeout when hello 
+  messages stops being received.
+
+0.5:
+* Replaced "#ifdef DEBUG" with a DEBUG macro to make the code cleaner.
+* Ported code to the NS-2 simulator. See README for more information.
+* Fixed bug in hello_process_non_hello() which caused the hop count of 
+  routes to not be updated.
+* Changes to how the timer/event queue is aged to better fit NS.
+* Fixed lots of RERR related bugs.
+* Fixed so that expired routing table entries are never expunged before 
+  PATH_TRAVERSAL_TIME when waiting for a RREP.
+* Moved packet buffering to separate source file (packet_queue.c).
+
+0.6: 
+* Made it so that a check for queued packets to send is always done
+  whenever a new route is added or updated.
+* Implemented simple rate limiting by discarding outgoing control packets 
+  in case the RATELIMIT is reached.
+* Added new aodv_neighbor.c module to separate generic neighbor processing 
+  from HELLO message processing. Now adding a neighbor is explicit and
+  separate from for example HELLO processing.
+* Code changed to conform with the new draft v11 terminology. Routing table 
+  debug output also changed to reflect this.
+* Fixed missing NULL pointer check for route pointer (line 320 of 
+  packet_input.c) that potentially could cause a segfault.
+* When using AODV-UU in NS, periodic routing table logging was not
+  performed until the routing table was updated for the first time. Fixed.
+* Compilation problems in NS under SuSE Linux ("undefined reference")
+  have been fixed.
+* NS support code updated to work with ns-2 version 2.1b9a.
+* NS support code should now compile under Sun Solaris and other platforms
+  which lack <endian.h>.
+* Implemented local repair.
+* Removed unnecessary flags in routing table.
+* Fixed RREP forwarding so that precursor lists are updated correctly.
+* Lots of code cleanups and restructuring.
+* Implemented garbage collection of old packets in packet_queue.c.
+
+0.7:
+* Added new RREP waiting parameters to conform with AODV draft v13.
+* Implemented a better RATELIMIT algorithm.
+* Fixed broken make targets (install, all).
+* Fixed bug that caused NO DELETE RERRs to not be sent. Thanks to McWood 
+  <hjw_5@hotmail.com>.
+* NS support code updated to work with ns-2 version 2.26.
+* aodv_socket.c now use RAW UDP sockets only.
+* New shared linked list implementation.
+* Lots of cleanup... Please report bugs!
+* Made link layer feedback a runtime option (in ns-2).
+
+0.7.1: 
+* Removed extra 8 bit "flags" in RREQ struct that was not supposed to
+be there. Thanks Krishna Prabhala <krisp@beech.netlab.uky.edu>, for
+discovering that.
+
+0.7.2:
+* Fixed small compilation bug when compiling against ns-2.
