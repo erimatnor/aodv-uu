@@ -140,6 +140,9 @@ int set_kernel_options()
     if (write(fd, &on, sizeof(char)) < 0)
 	return -1;
     close(fd);
+    /*
+      Disabled for kernel 2.6.28.
+
 
     if ((fd = open("/proc/sys/net/ipv4/route/max_delay", O_WRONLY)) < 0)
 	return -1;
@@ -152,7 +155,7 @@ int set_kernel_options()
     if (write(fd, &off, sizeof(char)) < 0)
 	return -1;
     close(fd);
-
+    */
     /* Disable ICMP redirects on all interfaces: */
 
     for (i = 0; i < MAX_NR_INTERFACES; i++) {
