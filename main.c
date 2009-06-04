@@ -156,6 +156,7 @@ int set_kernel_options()
 	return -1;
     close(fd);
     */
+
     /* Disable ICMP redirects on all interfaces: */
 
     for (i = 0; i < MAX_NR_INTERFACES; i++) {

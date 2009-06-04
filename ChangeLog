@@ -209,3 +209,8 @@
 * Fixed bug in requeuing of packets after local repair in ns-2
 (Balazs Kovacs <kovacsb@tmit.bme.hu>).
 * Compile fixes for Linux 2.6.22
+* Added network namespace parameter (&init_net) to kernel network functions. (see git commit object 881d966b)
+* proc_net_create() function has been removed from kernel 2.6.24 (see git commit object 44656ba1).i So it was replaced by create_proc_read_entry().
+* Netfilter has replaced sk_buff ** by sk_buff * (see git commit object 3db05fea)
+* netlink_kernel_create() 'input' parameter has been changed (see git commit object cd40b7d3)
+* Thanks to Andre Guedes <andreguedes85@gmail.com> from Federal University of Pernambuco (UFPE), Brazil.
