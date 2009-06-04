@@ -21,6 +21,7 @@
  *****************************************************************************/
 /* Expire list for aodv route information */
 
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/skbuff.h>
 #include <linux/netdevice.h>
@@ -284,7 +285,11 @@ static int kaodv_expl_print(char *buf)
 		int num_flags = 0;
 		struct expl_entry *e = (struct expl_entry *)pos;
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
 		dev = dev_get_by_index(e->ifindex);
+#else
+		dev = dev_get_by_index(&init_net, e->ifindex);
+#endif
 
 		if (!dev)
 			continue;
@@ -317,6 +322,7 @@ static int kaodv_expl_print(char *buf)
 	read_unlock_bh(&expl_lock);
 	return len;
 }
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
 static int
 kaodv_expl_proc_info(char *buffer, char **start, off_t offset, int length)
 {
@@ -332,6 +338,23 @@ kaodv_expl_proc_info(char *buffer, char **start, off_t offset, int length)
 		len = 0;
 	return len;
 }
+#else
+static int kaodv_expl_proc_info(char *page, char **start, off_t off, int count,
+                    int *eof, void *data)
+{
+	int len;
+
+	len = kaodv_expl_print(page);
+
+	*start = page + off;
+	len -= off;
+	if (len > count)
+		len = count;
+	else if (len < 0)
+		len = 0;
+	return len;
+}
+#endif
 
 int kaodv_expl_update(__u32 daddr, __u32 nhop, unsigned long time,
 		      unsigned short flags, int ifindex)
@@ -384,7 +407,11 @@ void kaodv_expl_flush(void)
 
 void kaodv_expl_init(void)
 {
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
 	proc_net_create("kaodv_expl", 0, kaodv_expl_proc_info);
+#else
+    create_proc_read_entry("kaodv_expl", 0, init_net.proc_net, kaodv_expl_proc_info, NULL);
+#endif
 
 	expl_len = 0;
 #ifdef EXPL_TIMER
@@ -395,5 +422,9 @@ void kaodv_expl_init(void)
 void kaodv_expl_fini(void)
 {
 	kaodv_expl_flush();
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
 	proc_net_remove("kaodv_expl");
+#else
+	proc_net_remove(&init_net, "kaodv_expl");
+#endif
 }

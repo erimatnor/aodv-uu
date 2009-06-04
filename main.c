@@ -293,7 +293,10 @@ void load_modules(char *ifname)
     else
 	sprintf(buf, "/sbin/modprobe kaodv ifname=%s &>/dev/null", ifname);
 
-    system(buf);
+    if (system(buf) == -1) {
+        fprintf(stderr, "Could not load kaodv module\n");
+        exit(-1);
+    }
 
     usleep(100000);
 
@@ -415,6 +418,7 @@ void host_init(char *ifname)
 
 	/* Get IP-address of interface... */
 	ina = get_if_info(iface, SIOCGIFADDR);
+
 	if (ina == NULL)
 	    exit(-1);
 
@@ -422,12 +426,14 @@ void host_init(char *ifname)
 
 	/* Get netmask of interface... */
 	ina = get_if_info(iface, SIOCGIFNETMASK);
+
 	if (ina == NULL)
 	    exit(-1);
 
 	DEV_IFINDEX(ifreq.ifr_ifindex).netmask = ina->sin_addr;
 
 	ina = get_if_info(iface, SIOCGIFBRDADDR);
+
 	if (ina == NULL)
 	    exit(-1);
 

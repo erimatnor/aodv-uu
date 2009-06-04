@@ -318,6 +318,7 @@ static inline void kaodv_netlink_rcv_skb(struct sk_buff *skb)
 	return;
 }
 
+#if 0
 static void kaodv_netlink_rcv_sk(struct sock *sk, int len)
 {
 	do {
@@ -337,6 +338,7 @@ static void kaodv_netlink_rcv_sk(struct sock *sk, int len)
 
 	return;
 }
+#endif
 
 int kaodv_netlink_init(void)
 {
@@ -345,8 +347,11 @@ int kaodv_netlink_init(void)
 	kaodvnl = netlink_kernel_create(NETLINK_AODV, kaodv_netlink_rcv_sk);
 #elif (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
 	kaodvnl = netlink_kernel_create(NETLINK_AODV, AODVGRP_MAX, kaodv_netlink_rcv_sk, THIS_MODULE);
-#else
+#elif (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
 	kaodvnl = netlink_kernel_create(NETLINK_AODV, AODVGRP_MAX, kaodv_netlink_rcv_sk, NULL, THIS_MODULE);
+#else
+	kaodvnl = netlink_kernel_create(&init_net, NETLINK_AODV, AODVGRP_MAX,
+                    kaodv_netlink_rcv_skb, NULL, THIS_MODULE);
 #endif
 	if (kaodvnl == NULL) {
 		printk(KERN_ERR "kaodv_netlink: failed to create netlink socket\n");

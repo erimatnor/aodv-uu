@@ -301,6 +301,8 @@ static void aodv_socket_read(int fd)
 		 CMSG_SPACE(sizeof(struct in_pktinfo))];
     struct sockaddr_in src_addr;
 
+    dst.s_addr = -1;
+
     iov.iov_base = recv_buf;
     iov.iov_len = RECV_BUF_SIZE;
     msgh.msg_name = &src_addr;

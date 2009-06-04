@@ -199,7 +199,7 @@ void NS_CLASS alog(int type, int errnum, const char *function, char *format,
 
     /* If we have the debug option set, also write to stdout */
     if (debug)
-	printf(log_buf);
+            printf("%s", log_buf);
 
     /* Syslog all messages that are of severity LOG_NOTICE or worse */
   syslog:
@@ -346,6 +346,7 @@ void NS_CLASS print_rt_table(void *arg)
     int i = 0;
     struct timeval now;
     struct tm *time;
+    ssize_t written;
 
     if (rt_tbl.num_entries == 0)
 	goto schedule;
@@ -370,7 +371,8 @@ void NS_CLASS print_rt_table(void *arg)
 		"Destination", "Next hop", "HC", "St.", "Seqno", "Expire",
 		"Flags", "Iface", "Precursors");
 
-    write(log_rt_fd, rt_buf, len);
+    written = write(log_rt_fd, rt_buf, len);
+
     len = 0;
 
     for (i = 0; i < RT_TABLESIZE; i++) {
@@ -423,13 +425,14 @@ void NS_CLASS print_rt_table(void *arg)
 		    /* Since the precursor list is grown dynamically
 		     * the write buffer should be flushed for every
 		     * entry to avoid buffer overflows */
-		    write(log_rt_fd, rt_buf, len);
+		    written = write(log_rt_fd, rt_buf, len);
+
 		    len = 0;
 
 		}
 	    }
 	    if (len > 0) {
-		write(log_rt_fd, rt_buf, len);
+		written = write(log_rt_fd, rt_buf, len);
 		len = 0;
 	    }
 	}

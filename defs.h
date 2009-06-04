@@ -104,7 +104,7 @@ struct host_info {
     struct timeval fwd_time;	/* The time a data packet was last forwarded */
     u_int32_t rreq_id;		/* RREQ id */
     int nif;			/* Number of interfaces to broadcast on */
-    struct dev_info devs[MAX_NR_INTERFACES];
+        struct dev_info devs[MAX_NR_INTERFACES+1]; /* Add +1 for returning as "error" in ifindex2devindex. */
 };
 
 
@@ -127,7 +127,7 @@ unsigned int dev_indices[MAX_NR_INTERFACES];
 /* Given a network interface index, return the index into the
    devs array, Necessary because ifindex is not always 0, 1,
    2... */
-static inline int ifindex2devindex(unsigned int ifindex)
+static inline unsigned int ifindex2devindex(unsigned int ifindex)
 {
     int i;
 
@@ -135,7 +135,7 @@ static inline int ifindex2devindex(unsigned int ifindex)
 	if (dev_indices[i] == ifindex)
 	    return i;
 
-    return -1;
+    return MAX_NR_INTERFACES;
 }
 
 static inline struct dev_info *devfromsock(int sock)

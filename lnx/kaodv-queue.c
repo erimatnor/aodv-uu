@@ -249,8 +249,10 @@ int kaodv_queue_set_verdict(int verdict, __u32 daddr)
 			}
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18))
 			ip_route_me_harder(&entry->skb);
-#else
+#elif (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
 			ip_route_me_harder(&entry->skb, RTN_LOCAL);
+#else
+			ip_route_me_harder(entry->skb, RTN_LOCAL);
 #endif
 			pkts++;
 
@@ -263,6 +265,7 @@ int kaodv_queue_set_verdict(int verdict, __u32 daddr)
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
 static int kaodv_queue_get_info(char *buffer, char **start, off_t offset, int length)
 {
 	int len;
@@ -283,6 +286,29 @@ static int kaodv_queue_get_info(char *buffer, char **start, off_t offset, int le
 		len = 0;
 	return len;
 }
+#else
+static int kaodv_queue_get_info(char *page, char **start, off_t off, int count,
+                    int *eof, void *data)
+{
+	int len;
+
+	read_lock_bh(&queue_lock);
+
+	len = sprintf(page,
+		      "Queue length      : %u\n"
+		      "Queue max. length : %u\n", queue_total, queue_maxlen);
+
+	read_unlock_bh(&queue_lock);
+
+	*start = page + off;
+	len -= off;
+	if (len > count)
+		len = count;
+	else if (len < 0)
+		len = 0;
+	return len;
+}
+#endif
 
 static int init_or_cleanup(int init)
 {
@@ -294,7 +320,12 @@ static int init_or_cleanup(int init)
 
 	queue_total = 0;
 	proc =
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
 	    proc_net_create(KAODV_QUEUE_PROC_FS_NAME, 0, kaodv_queue_get_info);
+#else
+        create_proc_read_entry(KAODV_QUEUE_PROC_FS_NAME, 0, init_net.proc_net,
+                    kaodv_queue_get_info, NULL);
+#endif
 	if (proc)
 		proc->owner = THIS_MODULE;
 	else {
@@ -309,8 +340,11 @@ static int init_or_cleanup(int init)
 #endif
 	kaodv_queue_flush();
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
 	proc_net_remove(KAODV_QUEUE_PROC_FS_NAME);
-
+#else
+	proc_net_remove(&init_net, KAODV_QUEUE_PROC_FS_NAME);
+#endif
 	return status;
 }
 
