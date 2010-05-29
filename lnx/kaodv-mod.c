@@ -34,6 +34,7 @@
 #include <linux/skbuff.h>
 #include <linux/netdevice.h>
 #include <linux/inetdevice.h>
+#include <linux/netfilter.h>
 #include <linux/netfilter_ipv4.h>
 #include <linux/in.h>
 #include <linux/ip.h>
@@ -49,6 +50,15 @@
 #include "kaodv-ipenc.h"
 #include "kaodv-debug.h"
 #include "kaodv.h"
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25))
+#define NF_INET_PRE_ROUTING NF_IP_PRE_ROUTING
+#define NF_INET_LOCAL_IN NF_IP_LOCAL_IN
+#define NF_INET_FORWARD NF_IP_FORWARD
+#define NF_INET_LOCAL_OUT NF_IP_LOCAL_OUT
+#define NF_INET_POST_ROUTING NF_IP_POST_ROUTING
+#define NF_INET_NUMHOOKS NF_IP_NUMHOOKS
+#endif
 
 #define ACTIVE_ROUTE_TIMEOUT active_route_timeout
 #define MAX_INTERFACES 10
