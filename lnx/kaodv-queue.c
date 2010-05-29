@@ -319,22 +319,24 @@ static int init_or_cleanup(int init)
 		goto cleanup;
 
 	queue_total = 0;
-	proc =
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
-	    proc_net_create(KAODV_QUEUE_PROC_FS_NAME, 0, kaodv_queue_get_info);
-#else
-        create_proc_read_entry(KAODV_QUEUE_PROC_FS_NAME, 0, init_net.proc_net,
-                    kaodv_queue_get_info, NULL);
-#endif
-	if (proc)
-		proc->owner = THIS_MODULE;
-	else {
-		printk(KERN_ERR "kaodv_queue: failed to create proc entry\n");
-		return -1;
-	}
-	return 1;
 
-      cleanup:
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
+	proc = proc_net_create(KAODV_QUEUE_PROC_FS_NAME, 0, kaodv_queue_get_info);
+#else
+	proc = create_proc_read_entry(KAODV_QUEUE_PROC_FS_NAME, 0, init_net.proc_net, kaodv_queue_get_info, NULL);
+#endif
+	if (!proc) {
+	  printk(KERN_ERR "kaodv_queue: failed to create proc entry\n");
+	  return -1;
+	}
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
+	proc->owner = THIS_MODULE;
+#endif
+
+	return 1;
+	
+ cleanup:
 #ifdef KERNEL26
 	synchronize_net();
 #endif

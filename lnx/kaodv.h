@@ -36,6 +36,20 @@
 #define SKB_SET_NETWORK_HDR(skb, offset) skb_set_network_header(skb, offset)
 #endif
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31))
+static inline struct dst_entry *skb_dst(const struct sk_buff *skb)
+{
+	return (struct dst_entry *)skb->dst;
+}
+
+static inline void skb_dst_set(struct sk_buff *skb, struct dst_entry *dst)
+{
+	skb->dst = dst;
+}
+#endif
+
+
+
 #define AODV_PORT 654
 
 #endif /* _KAODV_H */

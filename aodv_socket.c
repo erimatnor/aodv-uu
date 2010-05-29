@@ -330,8 +330,10 @@ static void aodv_socket_read(int fd)
 		ttl = *(CMSG_DATA(cmsg));
 		break;
 	    case IP_PKTINFO:
-		dst.s_addr =
-		    ((struct in_pktinfo *) CMSG_DATA(cmsg))->ipi_addr.s_addr;
+	      {
+		struct in_pktinfo *pi = (struct in_pktinfo *)CMSG_DATA(cmsg);
+		dst.s_addr = pi->ipi_addr.s_addr;
+	      }
 	    }
 	}
     }

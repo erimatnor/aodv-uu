@@ -27,13 +27,13 @@
 
 int trace(const char *fmt, ...)
 {
-	char buf[1024];
+	char buf[512];
 	va_list args;
 	int len;
 
 	va_start(args, fmt);
 
-	len = vsnprintf(buf, 1024, fmt, args);
+	len = vsnprintf(buf, 512, fmt, args);
 
 	va_end(args);
 	

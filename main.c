@@ -485,6 +485,9 @@ int main(int argc, char **argv)
     int n, nfds = 0, i;
     int daemonize = 0;
     struct timeval *timeout;
+    struct timespec timeout_spec;
+    struct sigaction sigact;
+    sigset_t mask, origmask;
 
     /* Remember the name of the executable... */
     progname = strrchr(argv[0], '/');
@@ -497,8 +500,27 @@ int main(int argc, char **argv)
     /* Use debug output as default */
     debug = 1;
 
-    /* Parse command line: */
+    memset (&sigact, 0, sizeof(struct sigaction));
+    sigact.sa_handler = signal_handler;
+        
+    /* This server should shut down on these signals. */
+    sigaction(SIGTERM, &sigact, 0);
+    sigaction(SIGHUP, &sigact, 0);
+    sigaction(SIGINT, &sigact, 0);
+    
+    sigaddset(&mask, SIGTERM);
+    sigaddset(&mask, SIGHUP);
+    sigaddset(&mask, SIGINT);
+    /* Only capture segmentation faults when we are not debugging... */
+#ifndef DEBUG
+    sigaddset(&mask, SIGSEGV);
+#endif
 
+    /* Block the signals we are watching here so that we can
+     * handle them in pselect instead. */
+    sigprocmask(SIG_BLOCK, &mask, &origmask);
+
+    /* Parse command line: */
     while (1) {
 	int opt;
 
@@ -615,15 +637,6 @@ int main(int argc, char **argv)
     }
 #endif
 
-    /* Catch SIGHUP, SIGINT and SIGTERM type signals */
-    signal(SIGHUP, signal_handler);
-    signal(SIGINT, signal_handler);
-    signal(SIGTERM, signal_handler);
-
-    /* Only capture segmentation faults when we are not debugging... */
-#ifndef DEBUG
-    signal(SIGSEGV, signal_handler);
-#endif
     /* Set sockets to watch... */
     FD_ZERO(&readers);
     for (i = 0; i < nr_callbacks; i++) {
@@ -652,8 +665,11 @@ int main(int argc, char **argv)
 	memcpy((char *) &rfds, (char *) &readers, sizeof(rfds));
 
 	timeout = timer_age_queue();
+	
+	timeout_spec.tv_sec = timeout->tv_sec;
+	timeout_spec.tv_nsec = timeout->tv_usec * 1000;
 
-	if ((n = select(nfds, &rfds, NULL, NULL, timeout)) < 0) {
+	if ((n = pselect(nfds, &rfds, NULL, NULL, &timeout_spec, &origmask)) < 0) {
 	    if (errno != EINTR)
 		alog(LOG_WARNING, errno, __FUNCTION__,
 		     "Failed select (main loop)");
