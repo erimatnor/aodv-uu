@@ -410,7 +410,8 @@ void kaodv_expl_init(void)
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
 	proc_net_create("kaodv_expl", 0, kaodv_expl_proc_info);
 #else
-    create_proc_read_entry("kaodv_expl", 0, init_net.proc_net, kaodv_expl_proc_info, NULL);
+	create_proc_read_entry("kaodv_expl", 0, 
+			       init_net.proc_net, kaodv_expl_proc_info, NULL);
 #endif
 
 	expl_len = 0;

@@ -240,36 +240,6 @@ static unsigned int kaodv_hook(unsigned int hooknum,
 			return NF_STOLEN;
 
 		} else if (e.flags & KAODV_RT_GW_ENCAP) {
-#ifdef ENABLE_DISABLED
-			/* Make sure the maximum segment size (MSM) is
-			   reduced to account for the
-			   encapsulation. This is probably not the
-			   nicest way to do it. It works sometimes,
-			   but may freeze due to some locking issue
-			   that needs to be fix... */
-			if (iph->protocol == IPPROTO_TCP) {
-				
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
-				if ((*skb)->sk) {
-					struct tcp_sock *tp = tcp_sk((*skb)->sk);
-					if (tp->mss_cache > 1452) {
-						tp->rx_opt.user_mss = 1452;
-						tp->rx_opt.mss_clamp = 1452;
-						tcp_sync_mss((*skb)->sk, 1452);
-					}
-				}
-#else
-				if (skb->sk) {
-					struct tcp_sock *tp = tcp_sk(skb->sk);
-					if (tp->mss_cache > 1452) {
-						tp->rx_opt.user_mss = 1452;
-						tp->rx_opt.mss_clamp = 1452;
-						tcp_sync_mss(skb->sk, 1452);
-					}
-				}
-#endif
-			}
-#endif /* ENABLE_DISABLED */
 			/* Make sure that also the virtual Internet
 			 * dest entry is refreshed */
 			kaodv_update_route_timeouts(hooknum, out, iph);
@@ -408,8 +378,6 @@ static int __init kaodv_init(void)
 
 	if (ret < 0)
 		goto cleanup_hook1;
-
-
 
 	/* Prefetch network device info (ip, broadcast address, ifindex). */
 	for (i = 0; i < MAX_INTERFACES; i++) {
