@@ -189,7 +189,7 @@ static int kaodv_netlink_receive_peer(unsigned char type, void *msg,
 
 		ret = kaodv_expl_get(m->dst, &e);
 
-		if (ret < 0) {
+		if (ret > 0) {
 			ret = kaodv_expl_update(m->dst, m->nhop, m->time,
 						m->flags, m->ifindex);
 		} else {
