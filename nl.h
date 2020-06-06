@@ -17,7 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: Erik Nordström, <erik.nordstrom@it.uu.se>
- * 
+ *
  *****************************************************************************/
 #ifndef _NL_H
 #define _NL_H
@@ -27,9 +27,10 @@
 void nl_init(void);
 void nl_cleanup(void);
 int nl_send_add_route_msg(struct in_addr dest, struct in_addr next_hop,
-			  int metric, u_int32_t lifetime, int rt_flags,
-			  int ifindex);
-int nl_send_del_route_msg(struct in_addr dest, struct in_addr next_hop, int metric);
+                          int metric, u_int32_t lifetime, int rt_flags,
+                          int ifindex);
+int nl_send_del_route_msg(struct in_addr dest, struct in_addr next_hop,
+                          int metric);
 
 int nl_send_no_route_found_msg(struct in_addr dest);
 int nl_send_conf_msg(void);

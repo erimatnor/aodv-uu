@@ -17,12 +17,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: Erik Nordström, <erik.nordstrom@it.uu.se>
- * 
+ *
  *****************************************************************************/
 #ifndef _KAODV_H
 #define _KAODV_H
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 22))
 #define SKB_TAIL_PTR(skb) skb->tail
 #define SKB_NETWORK_HDR_RAW(skb) skb->nh.raw
 #define SKB_NETWORK_HDR_RIPH(skb) skb->nh.iph
@@ -36,19 +36,17 @@
 #define SKB_SET_NETWORK_HDR(skb, offset) skb_set_network_header(skb, offset)
 #endif
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 31))
 static inline struct dst_entry *skb_dst(const struct sk_buff *skb)
 {
-	return (struct dst_entry *)skb->dst;
+    return (struct dst_entry *)skb->dst;
 }
 
 static inline void skb_dst_set(struct sk_buff *skb, struct dst_entry *dst)
 {
-	skb->dst = dst;
+    skb->dst = dst;
 }
 #endif
-
-
 
 #define AODV_PORT 654
 

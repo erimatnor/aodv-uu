@@ -16,8 +16,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Erik Nordström, <erik.nordstrom@it.uu.se>
- *          
+ * Authors: Erik NordstrÃ¶m, <erik.nordstrom@it.uu.se>
+ *
  *
  *****************************************************************************/
 #ifndef _SEEK_LIST_H
@@ -25,10 +25,10 @@
 
 #ifndef NS_NO_GLOBALS
 #include "defs.h"
-#include "timer_queue.h"
 #include "list.h"
+#include "timer_queue.h"
 
-#define IP_DATA_MAX_LEN 60 + 8	/* Max IP header + 64 bits of data */
+#define IP_DATA_MAX_LEN 60 + 8 /* Max IP header + 64 bits of data */
 
 struct ip_data {
     char data[IP_DATA_MAX_LEN];
@@ -41,25 +41,25 @@ typedef struct seek_list {
     struct in_addr dest_addr;
     u_int32_t dest_seqno;
     struct ip_data *ipd;
-    u_int8_t flags;		/* The flags we are using for resending the RREQ */
+    u_int8_t flags; /* The flags we are using for resending the RREQ */
     int reqs;
     int ttl;
     struct timer seek_timer;
 } seek_list_t;
-#endif				/* NS_NO_GLOBALS */
+#endif /* NS_NO_GLOBALS */
 
 #ifndef NS_NO_DECLARATIONS
 seek_list_t *seek_list_insert(struct in_addr dest_addr, u_int32_t dest_seqno,
-			      int ttl, u_int8_t flags, struct ip_data *ipd);
-int seek_list_remove(seek_list_t * entry);
+                              int ttl, u_int8_t flags, struct ip_data *ipd);
+int seek_list_remove(seek_list_t *entry);
 seek_list_t *seek_list_find(struct in_addr dest_addr);
 
 #ifdef NS_PORT
 #ifdef SEEK_LIST_DEBUG
 void seek_list_print();
 #endif
-#endif				/* NS_PORT */
+#endif /* NS_PORT */
 
-#endif				/* NS_NO_DECLARATIONS */
+#endif /* NS_NO_DECLARATIONS */
 
-#endif				/* SEEK_LIST_H */
+#endif /* SEEK_LIST_H */

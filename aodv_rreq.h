@@ -16,8 +16,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Erik Nordström, <erik.nordstrom@it.uu.se>
- *          
+ * Authors: Erik NordstrÃ¶m, <erik.nordstrom@it.uu.se>
+ *
  *
  *****************************************************************************/
 #ifndef _AODV_RREQ_H
@@ -27,29 +27,29 @@
 #include <endian.h>
 
 #include "defs.h"
-#include "seek_list.h"
 #include "routing_table.h"
+#include "seek_list.h"
 
 /* RREQ Flags: */
-#define RREQ_JOIN          0x1
-#define RREQ_REPAIR        0x2
-#define RREQ_GRATUITOUS    0x4
-#define RREQ_DEST_ONLY     0x8
+#define RREQ_JOIN 0x1
+#define RREQ_REPAIR 0x2
+#define RREQ_GRATUITOUS 0x4
+#define RREQ_DEST_ONLY 0x8
 
 typedef struct {
     u_int8_t type;
 #if defined(__LITTLE_ENDIAN)
-    u_int8_t res1:4;
-    u_int8_t d:1;
-    u_int8_t g:1;
-    u_int8_t r:1;
-    u_int8_t j:1;
+    u_int8_t res1 : 4;
+    u_int8_t d : 1;
+    u_int8_t g : 1;
+    u_int8_t r : 1;
+    u_int8_t j : 1;
 #elif defined(__BIG_ENDIAN)
-    u_int8_t j:1;		/* Join flag (multicast) */
-    u_int8_t r:1;		/* Repair flag */
-    u_int8_t g:1;		/* Gratuitous RREP flag */
-    u_int8_t d:1;		/* Destination only respond */
-    u_int8_t res1:4;
+    u_int8_t j : 1; /* Join flag (multicast) */
+    u_int8_t r : 1; /* Repair flag */
+    u_int8_t g : 1; /* Gratuitous RREP flag */
+    u_int8_t d : 1; /* Destination only respond */
+    u_int8_t res1 : 4;
 #else
 #error "Adjust your <bits/endian.h> defines"
 #endif
@@ -67,8 +67,8 @@ typedef struct {
 /* A data structure to buffer information about received RREQ's */
 struct rreq_record {
     list_t l;
-    struct in_addr orig_addr;	/* Source of the RREQ */
-    u_int32_t rreq_id;		/* RREQ's broadcast ID */
+    struct in_addr orig_addr; /* Source of the RREQ */
+    u_int32_t rreq_id;        /* RREQ's broadcast ID */
     struct timer rec_timer;
 };
 
@@ -77,32 +77,32 @@ struct blacklist {
     struct in_addr dest_addr;
     struct timer bl_timer;
 };
-#endif				/* NS_NO_GLOBALS */
+#endif /* NS_NO_GLOBALS */
 
 #ifndef NS_NO_DECLARATIONS
 RREQ *rreq_create(u_int8_t flags, struct in_addr dest_addr,
-		  u_int32_t dest_seqno, struct in_addr orig_addr);
+                  u_int32_t dest_seqno, struct in_addr orig_addr);
 void rreq_send(struct in_addr dest_addr, u_int32_t dest_seqno, int ttl,
-	       u_int8_t flags);
-void rreq_forward(RREQ * rreq, int size, int ttl);
-void rreq_process(RREQ * rreq, int rreqlen, struct in_addr ip_src,
-		  struct in_addr ip_dst, int ip_ttl, unsigned int ifindex);
+               u_int8_t flags);
+void rreq_forward(RREQ *rreq, int size, int ttl);
+void rreq_process(RREQ *rreq, int rreqlen, struct in_addr ip_src,
+                  struct in_addr ip_dst, int ip_ttl, unsigned int ifindex);
 void rreq_route_discovery(struct in_addr dest_addr, u_int8_t flags,
-			  struct ip_data *ipd);
+                          struct ip_data *ipd);
 void rreq_record_timeout(void *arg);
 struct blacklist *rreq_blacklist_insert(struct in_addr dest_addr);
 void rreq_blacklist_timeout(void *arg);
-void rreq_local_repair(rt_table_t * rt, struct in_addr src_addr,
-		       struct ip_data *ipd);
+void rreq_local_repair(rt_table_t *rt, struct in_addr src_addr,
+                       struct ip_data *ipd);
 
 #ifdef NS_PORT
 struct rreq_record *rreq_record_insert(struct in_addr orig_addr,
-				       u_int32_t rreq_id);
+                                       u_int32_t rreq_id);
 struct rreq_record *rreq_record_find(struct in_addr orig_addr,
-				     u_int32_t rreq_id);
+                                     u_int32_t rreq_id);
 struct blacklist *rreq_blacklist_find(struct in_addr dest_addr);
-#endif				/* NS_PORT */
+#endif /* NS_PORT */
 
-#endif				/* NS_NO_DECLARATIONS */
+#endif /* NS_NO_DECLARATIONS */
 
-#endif				/* AODV_RREQ_H */
+#endif /* AODV_RREQ_H */

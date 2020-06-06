@@ -16,8 +16,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Erik Nordström, <erik.nordstrom@it.uu.se>
- *          
+ * Authors: Erik NordstrÃ¶m, <erik.nordstrom@it.uu.se>
+ *
  *
  *****************************************************************************/
 #ifndef _AODV_TIMEOUT_H
@@ -25,7 +25,7 @@
 
 #ifndef NS_NO_GLOBALS
 #include "defs.h"
-#endif				/* NS_NO_GLOBALS */
+#endif /* NS_NO_GLOBALS */
 
 #ifndef NS_NO_DECLARATIONS
 void route_delete_timeout(void *arg);
@@ -36,6 +36,6 @@ void hello_timeout(void *arg);
 void rrep_ack_timeout(void *arg);
 void wait_on_reboot_timeout(void *arg);
 void packet_queue_timeout(void *arg);
-#endif				/* NS_NO_DECLARATIONS */
+#endif /* NS_NO_DECLARATIONS */
 
-#endif				/* AODV_TIMEOUT_H */
+#endif /* AODV_TIMEOUT_H */

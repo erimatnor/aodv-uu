@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Erik Nordström, <erik.nordstrom@it.uu.se>
+ * Authors: Erik NordstrÃ¶m, <erik.nordstrom@it.uu.se>
  *
  *****************************************************************************/
 
@@ -25,25 +25,25 @@
 #ifdef NS_PORT
 #include "ns-2/aodv-uu.h"
 #else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <net/if.h>
-#include <netinet/udp.h>
-#include "aodv_socket.h"
-#include "timer_queue.h"
-#include "aodv_rreq.h"
-#include "aodv_rerr.h"
-#include "aodv_rrep.h"
-#include "params.h"
 #include "aodv_hello.h"
 #include "aodv_neighbor.h"
+#include "aodv_rerr.h"
+#include "aodv_rrep.h"
+#include "aodv_rreq.h"
+#include "aodv_socket.h"
 #include "debug.h"
 #include "defs.h"
+#include "params.h"
+#include "timer_queue.h"
+#include <net/if.h>
+#include <netinet/in.h>
+#include <netinet/udp.h>
+#include <sys/socket.h>
 
-#endif				/* NS_PORT */
+#endif /* NS_PORT */
 
 #ifndef NS_PORT
-#define SO_RECVBUF_SIZE 256*1024
+#define SO_RECVBUF_SIZE 256 * 1024
 
 static char recv_buf[RECV_BUF_SIZE];
 static char send_buf[SEND_BUF_SIZE];
@@ -56,14 +56,14 @@ static void aodv_socket_read(int fd);
  * CMSG_NXTHDR() routine... redefining it here */
 
 static struct cmsghdr *__cmsg_nxthdr_fix(void *__ctl, size_t __size,
-					 struct cmsghdr *__cmsg)
+                                         struct cmsghdr *__cmsg)
 {
     struct cmsghdr *__ptr;
 
-    __ptr = (struct cmsghdr *) (((unsigned char *) __cmsg) +
-				CMSG_ALIGN(__cmsg->cmsg_len));
-    if ((unsigned long) ((char *) (__ptr + 1) - (char *) __ctl) > __size)
-	return NULL;
+    __ptr = (struct cmsghdr *)(((unsigned char *)__cmsg) +
+                               CMSG_ALIGN(__cmsg->cmsg_len));
+    if ((unsigned long)((char *)(__ptr + 1) - (char *)__ctl) > __size)
+        return NULL;
 
     return __ptr;
 }
@@ -73,8 +73,7 @@ struct cmsghdr *cmsg_nxthdr_fix(struct msghdr *__msg, struct cmsghdr *__cmsg)
     return __cmsg_nxthdr_fix(__msg->msg_control, __msg->msg_controllen, __cmsg);
 }
 
-#endif				/* NS_PORT */
-
+#endif /* NS_PORT */
 
 void NS_CLASS aodv_socket_init()
 {
@@ -90,135 +89,134 @@ void NS_CLASS aodv_socket_init()
     /* Create a UDP socket */
 
     if (this_host.nif == 0) {
-	fprintf(stderr, "No interfaces configured\n");
-	exit(-1);
+        fprintf(stderr, "No interfaces configured\n");
+        exit(-1);
     }
 
     /* Open a socket for every AODV enabled interface */
     for (i = 0; i < MAX_NR_INTERFACES; i++) {
-	if (!DEV_NR(i).enabled)
-	    continue;
+        if (!DEV_NR(i).enabled)
+            continue;
 
-	/* AODV socket */
-	DEV_NR(i).sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (DEV_NR(i).sock < 0) {
-	    perror("");
-	    exit(-1);
-	}
+        /* AODV socket */
+        DEV_NR(i).sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        if (DEV_NR(i).sock < 0) {
+            perror("");
+            exit(-1);
+        }
 #ifdef CONFIG_GATEWAY
-	/* Data packet send socket */
-	DEV_NR(i).psock = socket(PF_INET, SOCK_RAW, IPPROTO_RAW);
+        /* Data packet send socket */
+        DEV_NR(i).psock = socket(PF_INET, SOCK_RAW, IPPROTO_RAW);
 
-	if (DEV_NR(i).psock < 0) {
-	    perror("");
-	    exit(-1);
-	}
+        if (DEV_NR(i).psock < 0) {
+            perror("");
+            exit(-1);
+        }
 #endif
-	/* Bind the socket to the AODV port number */
-	memset(&aodv_addr, 0, sizeof(aodv_addr));
-	aodv_addr.sin_family = AF_INET;
-	aodv_addr.sin_port = htons(AODV_PORT);
-	aodv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+        /* Bind the socket to the AODV port number */
+        memset(&aodv_addr, 0, sizeof(aodv_addr));
+        aodv_addr.sin_family = AF_INET;
+        aodv_addr.sin_port = htons(AODV_PORT);
+        aodv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	retval = bind(DEV_NR(i).sock, (struct sockaddr *) &aodv_addr,
-		      sizeof(struct sockaddr));
+        retval = bind(DEV_NR(i).sock, (struct sockaddr *)&aodv_addr,
+                      sizeof(struct sockaddr));
 
-	if (retval < 0) {
-	    perror("Bind failed ");
-	    exit(-1);
-	}
-	if (setsockopt(DEV_NR(i).sock, SOL_SOCKET, SO_BROADCAST,
-		       &on, sizeof(int)) < 0) {
-	    perror("SO_BROADCAST failed ");
-	    exit(-1);
-	}
+        if (retval < 0) {
+            perror("Bind failed ");
+            exit(-1);
+        }
+        if (setsockopt(DEV_NR(i).sock, SOL_SOCKET, SO_BROADCAST, &on,
+                       sizeof(int)) < 0) {
+            perror("SO_BROADCAST failed ");
+            exit(-1);
+        }
 
-	memset(&ifr, 0, sizeof(struct ifreq));
-	strcpy(ifr.ifr_name, DEV_NR(i).ifname);
+        memset(&ifr, 0, sizeof(struct ifreq));
+        strcpy(ifr.ifr_name, DEV_NR(i).ifname);
 
-	if (setsockopt(DEV_NR(i).sock, SOL_SOCKET, SO_BINDTODEVICE,
-		       &ifr, sizeof(ifr)) < 0) {
-	    fprintf(stderr, "SO_BINDTODEVICE failed for %s", DEV_NR(i).ifname);
-	    perror(" ");
-	    exit(-1);
-	}
+        if (setsockopt(DEV_NR(i).sock, SOL_SOCKET, SO_BINDTODEVICE, &ifr,
+                       sizeof(ifr)) < 0) {
+            fprintf(stderr, "SO_BINDTODEVICE failed for %s", DEV_NR(i).ifname);
+            perror(" ");
+            exit(-1);
+        }
 
-	if (setsockopt(DEV_NR(i).sock, SOL_SOCKET, SO_PRIORITY,
-		       &tos, sizeof(int)) < 0) {
-	    perror("Setsockopt SO_PRIORITY failed ");
-	    exit(-1);
-	}
+        if (setsockopt(DEV_NR(i).sock, SOL_SOCKET, SO_PRIORITY, &tos,
+                       sizeof(int)) < 0) {
+            perror("Setsockopt SO_PRIORITY failed ");
+            exit(-1);
+        }
 
-	if (setsockopt(DEV_NR(i).sock, SOL_IP, IP_RECVTTL,
-		       &on, sizeof(int)) < 0) {
-	    perror("Setsockopt IP_RECVTTL failed ");
-	    exit(-1);
-	}
+        if (setsockopt(DEV_NR(i).sock, SOL_IP, IP_RECVTTL, &on, sizeof(int)) <
+            0) {
+            perror("Setsockopt IP_RECVTTL failed ");
+            exit(-1);
+        }
 
-	if (setsockopt(DEV_NR(i).sock, SOL_IP, IP_PKTINFO,
-		       &on, sizeof(int)) < 0) {
-	    perror("Setsockopt IP_PKTINFO failed ");
-	    exit(-1);
-	}
+        if (setsockopt(DEV_NR(i).sock, SOL_IP, IP_PKTINFO, &on, sizeof(int)) <
+            0) {
+            perror("Setsockopt IP_PKTINFO failed ");
+            exit(-1);
+        }
 #ifdef CONFIG_GATEWAY
-	if (setsockopt(DEV_NR(i).psock, SOL_SOCKET, SO_BINDTODEVICE,
-		       &ifr, sizeof(ifr)) < 0) {
-	    fprintf(stderr, "SO_BINDTODEVICE failed for %s", DEV_NR(i).ifname);
-	    perror(" ");
-	    exit(-1);
-	}
+        if (setsockopt(DEV_NR(i).psock, SOL_SOCKET, SO_BINDTODEVICE, &ifr,
+                       sizeof(ifr)) < 0) {
+            fprintf(stderr, "SO_BINDTODEVICE failed for %s", DEV_NR(i).ifname);
+            perror(" ");
+            exit(-1);
+        }
 
-	bufsize = 4 * 65535;
+        bufsize = 4 * 65535;
 
-	if (setsockopt(DEV_NR(i).psock, SOL_SOCKET, SO_SNDBUF,
-		       (char *) &bufsize, optlen) < 0) {
-	    DEBUG(LOG_NOTICE, 0, "Could not set send socket buffer size");
-	}
-	if (getsockopt(DEV_NR(i).psock, SOL_SOCKET, SO_SNDBUF,
-		       (char *) &bufsize, &optlen) == 0) {
-	    alog(LOG_NOTICE, 0, __FUNCTION__,
-		 "RAW send socket buffer size set to %d", bufsize);
-	}
+        if (setsockopt(DEV_NR(i).psock, SOL_SOCKET, SO_SNDBUF, (char *)&bufsize,
+                       optlen) < 0) {
+            DEBUG(LOG_NOTICE, 0, "Could not set send socket buffer size");
+        }
+        if (getsockopt(DEV_NR(i).psock, SOL_SOCKET, SO_SNDBUF, (char *)&bufsize,
+                       &optlen) == 0) {
+            alog(LOG_NOTICE, 0, __FUNCTION__,
+                 "RAW send socket buffer size set to %d", bufsize);
+        }
 #endif
-	/* Set max allowable receive buffer size... */
-	for (;; bufsize -= 1024) {
-	    if (setsockopt(DEV_NR(i).sock, SOL_SOCKET, SO_RCVBUF,
-			   (char *) &bufsize, optlen) == 0) {
-		alog(LOG_NOTICE, 0, __FUNCTION__,
-		     "Receive buffer size set to %d", bufsize);
-		break;
-	    }
-	    if (bufsize < RECV_BUF_SIZE) {
-		alog(LOG_ERR, 0, __FUNCTION__,
-		     "Could not set receive buffer size");
-		exit(-1);
-	    }
-	}
+        /* Set max allowable receive buffer size... */
+        for (;; bufsize -= 1024) {
+            if (setsockopt(DEV_NR(i).sock, SOL_SOCKET, SO_RCVBUF,
+                           (char *)&bufsize, optlen) == 0) {
+                alog(LOG_NOTICE, 0, __FUNCTION__,
+                     "Receive buffer size set to %d", bufsize);
+                break;
+            }
+            if (bufsize < RECV_BUF_SIZE) {
+                alog(LOG_ERR, 0, __FUNCTION__,
+                     "Could not set receive buffer size");
+                exit(-1);
+            }
+        }
 
-	retval = attach_callback_func(DEV_NR(i).sock, aodv_socket_read);
+        retval = attach_callback_func(DEV_NR(i).sock, aodv_socket_read);
 
-	if (retval < 0) {
-	    perror("register input handler failed ");
-	    exit(-1);
-	}
+        if (retval < 0) {
+            perror("register input handler failed ");
+            exit(-1);
+        }
     }
-#endif				/* NS_PORT */
+#endif /* NS_PORT */
 
     num_rreq = 0;
     num_rerr = 0;
 }
 
-void NS_CLASS aodv_socket_process_packet(AODV_msg * aodv_msg, int len,
-					 struct in_addr src,
-					 struct in_addr dst,
-					 int ttl, unsigned int ifindex)
+void NS_CLASS aodv_socket_process_packet(AODV_msg *aodv_msg, int len,
+                                         struct in_addr src, struct in_addr dst,
+                                         int ttl, unsigned int ifindex)
 {
 
     /* If this was a HELLO message... Process as HELLO. */
     if ((aodv_msg->type == AODV_RREP && ttl == 1 &&
-	 dst.s_addr == AODV_BROADCAST)) {
-	hello_process((RREP *) aodv_msg, len, ifindex);
-	return;
+         dst.s_addr == AODV_BROADCAST)) {
+        hello_process((RREP *)aodv_msg, len, ifindex);
+        return;
     }
 
     /* Make sure we add/update neighbors */
@@ -229,29 +227,29 @@ void NS_CLASS aodv_socket_process_packet(AODV_msg * aodv_msg, int len,
     switch (aodv_msg->type) {
 
     case AODV_RREQ:
-	rreq_process((RREQ *) aodv_msg, len, src, dst, ttl, ifindex);
-	break;
+        rreq_process((RREQ *)aodv_msg, len, src, dst, ttl, ifindex);
+        break;
     case AODV_RREP:
-	DEBUG(LOG_DEBUG, 0, "Received RREP");
-	rrep_process((RREP *) aodv_msg, len, src, dst, ttl, ifindex);
-	break;
+        DEBUG(LOG_DEBUG, 0, "Received RREP");
+        rrep_process((RREP *)aodv_msg, len, src, dst, ttl, ifindex);
+        break;
     case AODV_RERR:
-	DEBUG(LOG_DEBUG, 0, "Received RERR");
-	rerr_process((RERR *) aodv_msg, len, src, dst);
-	break;
+        DEBUG(LOG_DEBUG, 0, "Received RERR");
+        rerr_process((RERR *)aodv_msg, len, src, dst);
+        break;
     case AODV_RREP_ACK:
-	DEBUG(LOG_DEBUG, 0, "Received RREP_ACK");
-	rrep_ack_process((RREP_ack *) aodv_msg, len, src, dst);
-	break;
+        DEBUG(LOG_DEBUG, 0, "Received RREP_ACK");
+        rrep_ack_process((RREP_ack *)aodv_msg, len, src, dst);
+        break;
     default:
-	alog(LOG_WARNING, 0, __FUNCTION__,
-	     "Unknown msg type %u rcvd from %s to %s", aodv_msg->type,
-	     ip_to_str(src), ip_to_str(dst));
+        alog(LOG_WARNING, 0, __FUNCTION__,
+             "Unknown msg type %u rcvd from %s to %s", aodv_msg->type,
+             ip_to_str(src), ip_to_str(dst));
     }
 }
 
 #ifdef NS_PORT
-void NS_CLASS recvAODVUUPacket(Packet * p)
+void NS_CLASS recvAODVUUPacket(Packet *p)
 {
     int len, i, ttl = 0;
     struct in_addr src, dst;
@@ -264,7 +262,7 @@ void NS_CLASS recvAODVUUPacket(Packet * p)
     len = ch->size() - IP_HDR_LEN;
     ttl = ih->ttl();
 
-    AODV_msg *aodv_msg = (AODV_msg *) recv_buf;
+    AODV_msg *aodv_msg = (AODV_msg *)recv_buf;
 
     /* Only handle AODVUU packets */
     assert(ch->ptype() == PT_AODVUU);
@@ -280,10 +278,9 @@ void NS_CLASS recvAODVUUPacket(Packet * p)
 
     /* Ignore messages generated locally */
     for (i = 0; i < MAX_NR_INTERFACES; i++)
-	if (this_host.devs[i].enabled &&
-	    memcmp(&src, &this_host.devs[i].ipaddr,
-		   sizeof(struct in_addr)) == 0)
-	    return;
+        if (this_host.devs[i].enabled && memcmp(&src, &this_host.devs[i].ipaddr,
+                                                sizeof(struct in_addr)) == 0)
+            return;
 
     aodv_socket_process_packet(aodv_msg, len, src, dst, ttl, NS_IFINDEX);
 }
@@ -298,7 +295,7 @@ static void aodv_socket_read(int fd)
     struct cmsghdr *cmsg;
     struct iovec iov;
     char ctrlbuf[CMSG_SPACE(sizeof(int)) +
-		 CMSG_SPACE(sizeof(struct in_pktinfo))];
+                 CMSG_SPACE(sizeof(struct in_pktinfo))];
     struct sockaddr_in src_addr;
 
     dst.s_addr = -1;
@@ -315,56 +312,54 @@ static void aodv_socket_read(int fd)
     len = recvmsg(fd, &msgh, 0);
 
     if (len < 0) {
-	alog(LOG_WARNING, 0, __FUNCTION__, "receive ERROR len=%d!", len);
-	return;
+        alog(LOG_WARNING, 0, __FUNCTION__, "receive ERROR len=%d!", len);
+        return;
     }
 
     src.s_addr = src_addr.sin_addr.s_addr;
 
     /* Get the ttl and destination address from the control message */
     for (cmsg = CMSG_FIRSTHDR(&msgh); cmsg != NULL;
-	 cmsg = CMSG_NXTHDR_FIX(&msgh, cmsg)) {
-	if (cmsg->cmsg_level == SOL_IP) {
-	    switch (cmsg->cmsg_type) {
-	    case IP_TTL:
-		ttl = *(CMSG_DATA(cmsg));
-		break;
-	    case IP_PKTINFO:
-	      {
-		struct in_pktinfo *pi = (struct in_pktinfo *)CMSG_DATA(cmsg);
-		dst.s_addr = pi->ipi_addr.s_addr;
-	      }
-	    }
-	}
+         cmsg = CMSG_NXTHDR_FIX(&msgh, cmsg)) {
+        if (cmsg->cmsg_level == SOL_IP) {
+            switch (cmsg->cmsg_type) {
+            case IP_TTL:
+                ttl = *(CMSG_DATA(cmsg));
+                break;
+            case IP_PKTINFO: {
+                struct in_pktinfo *pi = (struct in_pktinfo *)CMSG_DATA(cmsg);
+                dst.s_addr = pi->ipi_addr.s_addr;
+            }
+            }
+        }
     }
 
     if (ttl < 0) {
-	DEBUG(LOG_DEBUG, 0, "No TTL, packet ignored!");
-	return;
+        DEBUG(LOG_DEBUG, 0, "No TTL, packet ignored!");
+        return;
     }
 
     /* Ignore messages generated locally */
     for (i = 0; i < MAX_NR_INTERFACES; i++)
-	if (this_host.devs[i].enabled &&
-	    memcmp(&src, &this_host.devs[i].ipaddr,
-		   sizeof(struct in_addr)) == 0)
-	    return;
+        if (this_host.devs[i].enabled && memcmp(&src, &this_host.devs[i].ipaddr,
+                                                sizeof(struct in_addr)) == 0)
+            return;
 
-    aodv_msg = (AODV_msg *) recv_buf;
+    aodv_msg = (AODV_msg *)recv_buf;
 
     dev = devfromsock(fd);
 
     if (!dev) {
-	DEBUG(LOG_ERR, 0, "Could not get device info!\n");
-	return;
+        DEBUG(LOG_ERR, 0, "Could not get device info!\n");
+        return;
     }
 
     aodv_socket_process_packet(aodv_msg, len, src, dst, ttl, dev->ifindex);
 }
-#endif				/* NS_PORT */
+#endif /* NS_PORT */
 
-void NS_CLASS aodv_socket_send(AODV_msg * aodv_msg, struct in_addr dst,
-			       int len, u_int8_t ttl, struct dev_info *dev)
+void NS_CLASS aodv_socket_send(AODV_msg *aodv_msg, struct in_addr dst, int len,
+                               u_int8_t ttl, struct dev_info *dev)
 {
     int retval = 0;
     struct timeval now;
@@ -375,7 +370,7 @@ void NS_CLASS aodv_socket_send(AODV_msg * aodv_msg, struct in_addr dst,
     struct sockaddr_in dst_addr;
 
     if (wait_on_reboot && aodv_msg->type == AODV_RREP)
-	return;
+        return;
 
     memset(&dst_addr, 0, sizeof(dst_addr));
     dst_addr.sin_family = AF_INET;
@@ -384,8 +379,8 @@ void NS_CLASS aodv_socket_send(AODV_msg * aodv_msg, struct in_addr dst,
 
     /* Set ttl */
     if (setsockopt(dev->sock, SOL_IP, IP_TTL, &ttl, sizeof(ttl)) < 0) {
-	alog(LOG_WARNING, 0, __FUNCTION__, "ERROR setting ttl!");
-	return;
+        alog(LOG_WARNING, 0, __FUNCTION__, "ERROR setting ttl!");
+        return;
     }
 #else
 
@@ -399,7 +394,7 @@ void NS_CLASS aodv_socket_send(AODV_msg * aodv_msg, struct in_addr dst,
 
     /* If we are in waiting phase after reboot, don't send any RREPs */
     if (wait_on_reboot && aodv_msg->type == AODV_RREP)
-	return;
+        return;
 
     /*
        NS_PORT: Don't allocate packet until now. Otherwise packet uid
@@ -423,11 +418,11 @@ void NS_CLASS aodv_socket_send(AODV_msg * aodv_msg, struct in_addr dst,
     ch->size() += len + IP_HDR_LEN;
     ch->iface() = -2;
     ch->error() = 0;
-    ch->prev_hop_ = (nsaddr_t) dev->ipaddr.s_addr;
+    ch->prev_hop_ = (nsaddr_t)dev->ipaddr.s_addr;
 
     // Set IP header fields
-    ih->saddr() = (nsaddr_t) dev->ipaddr.s_addr;
-    ih->daddr() = (nsaddr_t) dst.s_addr;
+    ih->saddr() = (nsaddr_t)dev->ipaddr.s_addr;
+    ih->daddr() = (nsaddr_t)dst.s_addr;
     ih->ttl() = ttl;
 
     // Note: Port number for routing agents, not AODV port number!
@@ -436,7 +431,7 @@ void NS_CLASS aodv_socket_send(AODV_msg * aodv_msg, struct in_addr dst,
 
     // Fake success
     retval = len;
-#endif				/* NS_PORT */
+#endif /* NS_PORT */
 
     /* If rate limiting is enabled, check if we are sending either a
        RREQ or a RERR. In that case, drop the outgoing control packet
@@ -445,101 +440,101 @@ void NS_CLASS aodv_socket_send(AODV_msg * aodv_msg, struct in_addr dst,
 
     if (ratelimit) {
 
-	gettimeofday(&now, NULL);
+        gettimeofday(&now, NULL);
 
-	switch (aodv_msg->type) {
-	case AODV_RREQ:
-	    if (num_rreq == (RREQ_RATELIMIT - 1)) {
-		if (timeval_diff(&now, &rreq_ratel[0]) < 1000) {
-		    DEBUG(LOG_DEBUG, 0, "RATELIMIT: Dropping RREQ %ld ms",
-			  timeval_diff(&now, &rreq_ratel[0]));
+        switch (aodv_msg->type) {
+        case AODV_RREQ:
+            if (num_rreq == (RREQ_RATELIMIT - 1)) {
+                if (timeval_diff(&now, &rreq_ratel[0]) < 1000) {
+                    DEBUG(LOG_DEBUG, 0, "RATELIMIT: Dropping RREQ %ld ms",
+                          timeval_diff(&now, &rreq_ratel[0]));
 #ifdef NS_PORT
-		  	Packet::free(p);
+                    Packet::free(p);
 #endif
-		    return;
-		} else {
-		    memmove(rreq_ratel, &rreq_ratel[1],
-			    sizeof(struct timeval) * (num_rreq - 1));
-		    memcpy(&rreq_ratel[num_rreq - 1], &now,
-			   sizeof(struct timeval));
-		}
-	    } else {
-		memcpy(&rreq_ratel[num_rreq], &now, sizeof(struct timeval));
-		num_rreq++;
-	    }
-	    break;
-	case AODV_RERR:
-	    if (num_rerr == (RERR_RATELIMIT - 1)) {
-		if (timeval_diff(&now, &rerr_ratel[0]) < 1000) {
-		    DEBUG(LOG_DEBUG, 0, "RATELIMIT: Dropping RERR %ld ms",
-			  timeval_diff(&now, &rerr_ratel[0]));
+                    return;
+                } else {
+                    memmove(rreq_ratel, &rreq_ratel[1],
+                            sizeof(struct timeval) * (num_rreq - 1));
+                    memcpy(&rreq_ratel[num_rreq - 1], &now,
+                           sizeof(struct timeval));
+                }
+            } else {
+                memcpy(&rreq_ratel[num_rreq], &now, sizeof(struct timeval));
+                num_rreq++;
+            }
+            break;
+        case AODV_RERR:
+            if (num_rerr == (RERR_RATELIMIT - 1)) {
+                if (timeval_diff(&now, &rerr_ratel[0]) < 1000) {
+                    DEBUG(LOG_DEBUG, 0, "RATELIMIT: Dropping RERR %ld ms",
+                          timeval_diff(&now, &rerr_ratel[0]));
 #ifdef NS_PORT
-		  	Packet::free(p);
+                    Packet::free(p);
 #endif
-		    return;
-		} else {
-		    memmove(rerr_ratel, &rerr_ratel[1],
-			    sizeof(struct timeval) * (num_rerr - 1));
-		    memcpy(&rerr_ratel[num_rerr - 1], &now,
-			   sizeof(struct timeval));
-		}
-	    } else {
-		memcpy(&rerr_ratel[num_rerr], &now, sizeof(struct timeval));
-		num_rerr++;
-	    }
-	    break;
-	}
+                    return;
+                } else {
+                    memmove(rerr_ratel, &rerr_ratel[1],
+                            sizeof(struct timeval) * (num_rerr - 1));
+                    memcpy(&rerr_ratel[num_rerr - 1], &now,
+                           sizeof(struct timeval));
+                }
+            } else {
+                memcpy(&rerr_ratel[num_rerr], &now, sizeof(struct timeval));
+                num_rerr++;
+            }
+            break;
+        }
     }
 
     /* If we broadcast this message we update the time of last broadcast
        to prevent unnecessary broadcasts of HELLO msg's */
     if (dst.s_addr == AODV_BROADCAST) {
 
-	gettimeofday(&this_host.bcast_time, NULL);
+        gettimeofday(&this_host.bcast_time, NULL);
 
 #ifdef NS_PORT
-	ch->addr_type() = NS_AF_NONE;
+        ch->addr_type() = NS_AF_NONE;
 
-	sendPacket(p, dst, 0.0);
+        sendPacket(p, dst, 0.0);
 #else
 
-	retval = sendto(dev->sock, send_buf, len, 0,
-			(struct sockaddr *) &dst_addr, sizeof(dst_addr));
+        retval = sendto(dev->sock, send_buf, len, 0,
+                        (struct sockaddr *)&dst_addr, sizeof(dst_addr));
 
-	if (retval < 0) {
+        if (retval < 0) {
 
-	    alog(LOG_WARNING, errno, __FUNCTION__, "Failed send to bc %s",
-		 ip_to_str(dst));
-	    return;
-	}
+            alog(LOG_WARNING, errno, __FUNCTION__, "Failed send to bc %s",
+                 ip_to_str(dst));
+            return;
+        }
 #endif
 
     } else {
 
 #ifdef NS_PORT
-	ch->addr_type() = NS_AF_INET;
-	/* We trust the decision of next hop for all AODV messages... */
+        ch->addr_type() = NS_AF_INET;
+        /* We trust the decision of next hop for all AODV messages... */
 
-	if (dst.s_addr == AODV_BROADCAST)
-	    sendPacket(p, dst, 0.001 * Random::uniform());
-	else
-	    sendPacket(p, dst, 0.0);
+        if (dst.s_addr == AODV_BROADCAST)
+            sendPacket(p, dst, 0.001 * Random::uniform());
+        else
+            sendPacket(p, dst, 0.0);
 #else
-	retval = sendto(dev->sock, send_buf, len, 0,
-			(struct sockaddr *) &dst_addr, sizeof(dst_addr));
+        retval = sendto(dev->sock, send_buf, len, 0,
+                        (struct sockaddr *)&dst_addr, sizeof(dst_addr));
 
-	if (retval < 0) {
-	    alog(LOG_WARNING, errno, __FUNCTION__, "Failed send to %s",
-		 ip_to_str(dst));
-	    return;
-	}
+        if (retval < 0) {
+            alog(LOG_WARNING, errno, __FUNCTION__, "Failed send to %s",
+                 ip_to_str(dst));
+            return;
+        }
 #endif
     }
 
     /* Do not print hello msgs... */
     if (!(aodv_msg->type == AODV_RREP && (dst.s_addr == AODV_BROADCAST)))
-	DEBUG(LOG_INFO, 0, "AODV msg to %s ttl=%d size=%u",
-	      ip_to_str(dst), ttl, retval, len);
+        DEBUG(LOG_INFO, 0, "AODV msg to %s ttl=%d size=%u", ip_to_str(dst), ttl,
+              retval, len);
 
     return;
 }
@@ -547,14 +542,14 @@ void NS_CLASS aodv_socket_send(AODV_msg * aodv_msg, struct in_addr dst,
 AODV_msg *NS_CLASS aodv_socket_new_msg(void)
 {
     memset(send_buf, '\0', SEND_BUF_SIZE);
-    return (AODV_msg *) (send_buf);
+    return (AODV_msg *)(send_buf);
 }
 
 /* Copy an existing AODV message to the send buffer */
-AODV_msg *NS_CLASS aodv_socket_queue_msg(AODV_msg * aodv_msg, int size)
+AODV_msg *NS_CLASS aodv_socket_queue_msg(AODV_msg *aodv_msg, int size)
 {
-    memcpy((char *) send_buf, aodv_msg, size);
-    return (AODV_msg *) send_buf;
+    memcpy((char *)send_buf, aodv_msg, size);
+    return (AODV_msg *)send_buf;
 }
 
 void aodv_socket_cleanup(void)
@@ -563,9 +558,9 @@ void aodv_socket_cleanup(void)
     int i;
 
     for (i = 0; i < MAX_NR_INTERFACES; i++) {
-	if (!DEV_NR(i).enabled)
-	    continue;
-	close(DEV_NR(i).sock);
+        if (!DEV_NR(i).enabled)
+            continue;
+        close(DEV_NR(i).sock);
     }
-#endif				/* NS_PORT */
+#endif /* NS_PORT */
 }

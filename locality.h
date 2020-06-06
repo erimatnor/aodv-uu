@@ -24,15 +24,11 @@
 
 #ifndef NS_NO_GLOBALS
 
-enum {
-    HOST_ADHOC,
-    HOST_INET,
-    HOST_UNKNOWN
-};
-#endif				/* NS_NO_GLOBALS */
+enum { HOST_ADHOC, HOST_INET, HOST_UNKNOWN };
+#endif /* NS_NO_GLOBALS */
 
 #ifndef NS_NO_DECLARATIONS
 int locality(struct in_addr dest, unsigned int ifindex);
-#endif				/* NS_NO_DECLARATIONS */
+#endif /* NS_NO_DECLARATIONS */
 
 #endif
