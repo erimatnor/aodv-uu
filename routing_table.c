@@ -268,7 +268,7 @@ rt_table_t *NS_CLASS rt_table_update(rt_table_t * rt, struct in_addr next,
 	return rt;
 }
 
-NS_INLINE rt_table_t *NS_CLASS rt_table_update_timeout(rt_table_t * rt,
+rt_table_t *NS_CLASS rt_table_update_timeout(rt_table_t * rt,
 						       u_int32_t lifetime)
 {
 	struct timeval new_timeout;
