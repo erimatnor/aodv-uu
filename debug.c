@@ -437,6 +437,10 @@ void NS_CLASS print_rt_table(void *arg)
 	    }
 	}
     }
+
+    /* ignore compiler warning */
+    (void) written;
+
     /* Schedule a new printing of routing table... */
   schedule:
     timer_set_timeout(&rt_log_timer, rt_log_interval);
