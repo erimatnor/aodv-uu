@@ -26,6 +26,8 @@
 extern int debug;
 #endif
 
+#include "defs.h"
+
 #ifndef NS_NO_DECLARATIONS
 void log_init();
 void log_cleanup();
