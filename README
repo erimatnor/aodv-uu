@@ -73,6 +73,18 @@ the kernel):
 Module loading should happen automatically if AODV is installed and
 the module loading system (modprobe) is properly configured.
 
+Installation Debian
+===================
+
+Use Debian Lenny (5.0.10) to have Linux kernel 2.6.26 available.
+Install the aodv-uu dependencies:
+
+> apt-get install gcc make
+> apt-get install linux-headers-$(uname -r)
+
+All packages are available on the CD/DVD ISO files.
+Now compile aodv-uu as usual.
+
 Compiling for ARM (iPAQ, Zaurus)
 ================================
 
