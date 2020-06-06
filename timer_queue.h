@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Erik Nordström, <erik.nordstrom@it.uu.se>
+ * Authors: Erik NordstrÃ¶m, <erik.nordstrom@it.uu.se>
  *
  *****************************************************************************/
 #ifndef _TIMER_QUEUE_H
@@ -29,9 +29,9 @@
 #include "list.h"
 
 #ifdef NS_PORT
-typedef void (AODVUU::*timeout_func_t) (void *);
+typedef void (AODVUU::*timeout_func_t)(void *);
 #else
-typedef void (*timeout_func_t) (void *);
+typedef void (*timeout_func_t)(void *);
 #endif
 
 struct timer {
@@ -44,24 +44,24 @@ struct timer {
 
 static inline long timeval_diff(struct timeval *t1, struct timeval *t2)
 {
-    long long res;		/* We need this to avoid overflows while calculating... */
+    long long res; /* We need this to avoid overflows while calculating... */
 
     if (!t1 || !t2)
-	return -1;
+        return -1;
     else {
 
-	res = t1->tv_sec;
-	res = ((res - t2->tv_sec) * 1000000 + t1->tv_usec - t2->tv_usec) / 1000;
-	return (long) res;
+        res = t1->tv_sec;
+        res = ((res - t2->tv_sec) * 1000000 + t1->tv_usec - t2->tv_usec) / 1000;
+        return (long)res;
     }
 }
 
 static inline int timeval_add_msec(struct timeval *t, unsigned long msec)
 {
-    unsigned long long add;	/* Protect against overflows */
+    unsigned long long add; /* Protect against overflows */
 
     if (!t)
-	return -1;
+        return -1;
 
     add = t->tv_usec + (msec * 1000);
     t->tv_sec += add / 1000000;
@@ -69,7 +69,7 @@ static inline int timeval_add_msec(struct timeval *t, unsigned long msec)
 
     return 0;
 }
-#endif				/* NS_NO_GLOBALS */
+#endif /* NS_NO_GLOBALS */
 
 #ifndef NS_NO_DECLARATIONS
 void timer_queue_init();
@@ -86,10 +86,10 @@ void timer_timeout(struct timeval *now);
 
 #ifdef DEBUG_TIMER_QUEUE
 void NS_CLASS printTQ();
-#endif				/* DEBUG_TIMER_QUEUE */
+#endif /* DEBUG_TIMER_QUEUE */
 
-#endif				/* NS_PORT */
+#endif /* NS_PORT */
 
-#endif				/* NS_NO_DECLARATIONS */
+#endif /* NS_NO_DECLARATIONS */
 
-#endif				/* TIMER_QUEUE_H */
+#endif /* TIMER_QUEUE_H */

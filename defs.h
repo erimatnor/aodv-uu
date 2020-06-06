@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Erik Nordström, <erik.nordstrom@it.uu.se>
+ * Authors: Erik NordstrÃ¶m, <erik.nordstrom@it.uu.se>
  *
  *****************************************************************************/
 #ifndef _DEFS_H
@@ -24,22 +24,22 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #ifndef NS_PORT
-#include <sys/signal.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <netinet/ip.h>
 #include <sys/ioctl.h>
+#include <sys/signal.h>
 #endif
 
-#include <syslog.h>
 #include <errno.h>
-#include <string.h>
 #include <fcntl.h>
+#include <string.h>
+#include <syslog.h>
 
 #ifndef NS_PORT
 #include "timer_queue.h"
@@ -71,11 +71,11 @@
 #else
 #define AODV_LOG_PATH "/var/log/aodvd.log"
 #define AODV_RT_LOG_PATH "/var/log/aodvd.rtlog"
-#endif				/* NS_PORT */
+#endif /* NS_PORT */
 
-#define max(A,B) ( (A) > (B) ? (A):(B))
+#define max(A, B) ((A) > (B) ? (A) : (B))
 
-#define MINTTL 1		/* min TTL in the packets sent locally */
+#define MINTTL 1 /* min TTL in the packets sent locally */
 
 #define MAX_NR_INTERFACES 10
 #define MAX_IFINDEX (MAX_NR_INTERFACES - 1)
@@ -86,27 +86,28 @@
 
 /* Data for a network device */
 struct dev_info {
-    int enabled;		/* 1 if struct is used, else 0 */
-    int sock;			/* AODV socket associated with this device */
+    int enabled; /* 1 if struct is used, else 0 */
+    int sock;    /* AODV socket associated with this device */
 #ifdef CONFIG_GATEWAY
-    int psock;			/* Socket to send buffered data packets. */
+    int psock; /* Socket to send buffered data packets. */
 #endif
     unsigned int ifindex;
     char ifname[IFNAMSIZ];
-    struct in_addr ipaddr;	/* The local IP address */
-    struct in_addr netmask;	/* The netmask we use */
+    struct in_addr ipaddr;  /* The local IP address */
+    struct in_addr netmask; /* The netmask we use */
     struct in_addr broadcast;
 };
 
 struct host_info {
-    u_int32_t seqno;		/* Sequence number */
-    struct timeval bcast_time;	/* The time of the last broadcast msg sent */
-    struct timeval fwd_time;	/* The time a data packet was last forwarded */
-    u_int32_t rreq_id;		/* RREQ id */
-    int nif;			/* Number of interfaces to broadcast on */
-        struct dev_info devs[MAX_NR_INTERFACES+1]; /* Add +1 for returning as "error" in ifindex2devindex. */
+    u_int32_t seqno;           /* Sequence number */
+    struct timeval bcast_time; /* The time of the last broadcast msg sent */
+    struct timeval fwd_time;   /* The time a data packet was last forwarded */
+    u_int32_t rreq_id;         /* RREQ id */
+    int nif;                   /* Number of interfaces to broadcast on */
+    struct dev_info
+        devs[MAX_NR_INTERFACES +
+             1]; /* Add +1 for returning as "error" in ifindex2devindex. */
 };
-
 
 /*
   NS_PORT: TEMPORARY SOLUTION: Moved the two variables into the AODVUU class,
@@ -132,8 +133,8 @@ static inline unsigned int ifindex2devindex(unsigned int ifindex)
     int i;
 
     for (i = 0; i < this_host.nif; i++)
-	if (dev_indices[i] == ifindex)
-	    return i;
+        if (dev_indices[i] == ifindex)
+            return i;
 
     return MAX_NR_INTERFACES;
 }
@@ -143,8 +144,8 @@ static inline struct dev_info *devfromsock(int sock)
     int i;
 
     for (i = 0; i < this_host.nif; i++) {
-	if (this_host.devs[i].sock == sock)
-	    return &this_host.devs[i];
+        if (this_host.devs[i].sock == sock)
+            return &this_host.devs[i];
     }
     return NULL;
 }
@@ -154,30 +155,29 @@ static inline int name2index(char *name)
     int i;
 
     for (i = 0; i < this_host.nif; i++)
-	if (strcmp(name, this_host.devs[i].ifname) == 0)
-	    return this_host.devs[i].ifindex;
+        if (strcmp(name, this_host.devs[i].ifname) == 0)
+            return this_host.devs[i].ifindex;
 
     return -1;
 }
 
 #endif
 
-
 /* Two macros to simplify retriving of a dev_info struct. Either using
    an ifindex or a device number (index into devs array). */
 #define DEV_IFINDEX(ifindex) (this_host.devs[ifindex2devindex(ifindex)])
 #define DEV_NR(n) (this_host.devs[n])
 
- /* Broadcast address according to draft (255.255.255.255) */
-#define AODV_BROADCAST ((in_addr_t) 0xFFFFFFFF)
+/* Broadcast address according to draft (255.255.255.255) */
+#define AODV_BROADCAST ((in_addr_t)0xFFFFFFFF)
 
 #define AODV_PORT 654
 
 /* AODV Message types */
-#define AODV_HELLO    0		/* Really never used as a separate type... */
-#define AODV_RREQ     1
-#define AODV_RREP     2
-#define AODV_RERR     3
+#define AODV_HELLO 0 /* Really never used as a separate type... */
+#define AODV_RREQ 1
+#define AODV_RREP 2
+#define AODV_RERR 3
 #define AODV_RREP_ACK 4
 
 /* A generic AODV packet header struct... */
@@ -190,20 +190,19 @@ typedef struct {
 
 /* NS_PORT: Additions for the AODVUU packet type in ns-2 */
 #ifdef NS_PORT
-    static int offset_;		// Required by PacketHeaderManager
+    static int offset_; // Required by PacketHeaderManager
 
-    inline static int &offset() {
-	return offset_;
-    }
-    inline static AODV_msg *access(const Packet * p) {
-	return (AODV_msg *) p->access(offset_);
+    inline static int &offset() { return offset_; }
+    inline static AODV_msg *access(const Packet *p)
+    {
+        return (AODV_msg *)p->access(offset_);
     }
 
     int size();
 };
 
-typedef AODV_msg hdr_aodvuu;	// Name convention for headers
-#define HDR_AODVUU(p) ((hdr_aodvuu *) hdr_aodvuu::access(p))
+typedef AODV_msg hdr_aodvuu; // Name convention for headers
+#define HDR_AODVUU(p) ((hdr_aodvuu *)hdr_aodvuu::access(p))
 #else
 } AODV_msg;
 #endif
@@ -225,13 +224,14 @@ typedef struct {
 /* MACROS to access AODV extensions... */
 #define AODV_EXT_HDR_SIZE sizeof(AODV_ext)
 #define AODV_EXT_DATA(ext) ((char *)((char *)ext + AODV_EXT_HDR_SIZE))
-#define AODV_EXT_NEXT(ext) ((AODV_ext *)((char *)ext + AODV_EXT_HDR_SIZE + ext->length))
+#define AODV_EXT_NEXT(ext)                                                     \
+    ((AODV_ext *)((char *)ext + AODV_EXT_HDR_SIZE + ext->length))
 #define AODV_EXT_SIZE(ext) (AODV_EXT_HDR_SIZE + ext->length)
 
 #ifndef NS_PORT
 /* The callback function */
-typedef void (*callback_func_t) (int);
+typedef void (*callback_func_t)(int);
 extern int attach_callback_func(int fd, callback_func_t func);
 #endif
 
-#endif				/* DEFS_H */
+#endif /* DEFS_H */

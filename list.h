@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Erik Nordström, <erik.nordstrom@it.uu.se>
+ * Authors: Erik NordstrÃ¶m, <erik.nordstrom@it.uu.se>
  *
  *****************************************************************************/
 #ifndef _LIST_H
@@ -30,26 +30,30 @@ typedef struct list_t {
 #define LIST_NULL -1
 #define LIST_SUCCESS 1
 
-#define LIST(name) list_t name = { &(name), &(name) }
+#define LIST(name) list_t name = {&(name), &(name)}
 
-#define INIT_LIST_HEAD(h) do { \
-	(h)->next = (h); (h)->prev = (h); \
-} while (0)
+#define INIT_LIST_HEAD(h)                                                      \
+    do {                                                                       \
+        (h)->next = (h);                                                       \
+        (h)->prev = (h);                                                       \
+    } while (0)
 
-#define INIT_LIST_ELM(le) do { \
-	(le)->next = NULL; (le)->prev = NULL; \
-} while (0)
+#define INIT_LIST_ELM(le)                                                      \
+    do {                                                                       \
+        (le)->next = NULL;                                                     \
+        (le)->prev = NULL;                                                     \
+    } while (0)
 
-int list_detach(list_t * le);
-int list_add_tail(list_t * head, list_t * le);
-int list_add(list_t * head, list_t * le);
+int list_detach(list_t *le);
+int list_add_tail(list_t *head, list_t *le);
+int list_add(list_t *head, list_t *le);
 
-#define list_foreach(curr, head) \
-        for (curr = (head)->next; curr != (head); curr = curr->next)
+#define list_foreach(curr, head)                                               \
+    for (curr = (head)->next; curr != (head); curr = curr->next)
 
-#define list_foreach_safe(pos, tmp, head) \
-        for (pos = (head)->next, tmp = pos->next; pos != (head); \
-                pos = tmp, tmp = pos->next)
+#define list_foreach_safe(pos, tmp, head)                                      \
+    for (pos = (head)->next, tmp = pos->next; pos != (head);                   \
+         pos = tmp, tmp = pos->next)
 
 #define list_empty(head) ((head) == (head)->next)
 

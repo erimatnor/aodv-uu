@@ -19,26 +19,26 @@
  * Author: Erik Nordström, <erik.nordstrom@it.uu.se>
  *
  *****************************************************************************/
-#include <asm/uaccess.h>
 #include <asm/io.h>
+#include <asm/uaccess.h>
 
 #include "kaodv-debug.h"
 #include "kaodv-netlink.h"
 
 int trace(const char *fmt, ...)
 {
-	char buf[512];
-	va_list args;
-	int len;
+    char buf[512];
+    va_list args;
+    int len;
 
-	va_start(args, fmt);
+    va_start(args, fmt);
 
-	len = vsnprintf(buf, 512, fmt, args);
+    len = vsnprintf(buf, 512, fmt, args);
 
-	va_end(args);
-	
-	/* Send the message off to user space... */
-	kaodv_netlink_send_debug_msg(buf, len + 1);
+    va_end(args);
 
-	return 0;
+    /* Send the message off to user space... */
+    kaodv_netlink_send_debug_msg(buf, len + 1);
+
+    return 0;
 }

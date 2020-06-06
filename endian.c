@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Björn Wiberg <bjorn.wiberg@home.se>
+ * Authors: Bjï¿½rn Wiberg <bjorn.wiberg@home.se>
  *
  *****************************************************************************/
 
@@ -36,14 +36,11 @@
 int litend(void)
 {
     int i = 0;
-    ((char *) (&i))[0] = 1;
+    ((char *)(&i))[0] = 1;
     return (i == 1);
 }
 
-int bigend(void)
-{
-    return !litend();
-}
+int bigend(void) { return !litend(); }
 
 int main(int argc, char **argv)
 {
@@ -51,7 +48,7 @@ int main(int argc, char **argv)
     printf("#define ENDIAN_H\n");
     printf("#define __LITTLE_ENDIAN 1234\n");
     printf("#define __BIG_ENDIAN    4321\n");
-    printf("#define __BYTE_ORDER __%s_ENDIAN\n", litend()? "LITTLE" : "BIG");
+    printf("#define __BYTE_ORDER __%s_ENDIAN\n", litend() ? "LITTLE" : "BIG");
     printf("#endif\n");
     return 0;
 }

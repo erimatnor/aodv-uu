@@ -17,7 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: Erik Nordström, <erik.nordstrom@it.uu.se>
- * 
+ *
  *****************************************************************************/
 #ifndef _KAODV_QUEUE_H
 #define _KAODV_QUEUE_H
@@ -27,7 +27,7 @@
 
 int kaodv_queue_find(__u32 daddr);
 int kaodv_queue_enqueue_packet(struct sk_buff *skb,
-			       int (*okfn) (struct sk_buff *));
+                               int (*okfn)(struct sk_buff *));
 int kaodv_queue_set_verdict(int verdict, __u32 daddr);
 void kaodv_queue_flush(void);
 int kaodv_queue_init(void);

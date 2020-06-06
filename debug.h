@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Erik Nordström, <erik.nordstrom@it.uu.se>
+ * Authors: Erik NordstrÃ¶m, <erik.nordstrom@it.uu.se>
  *
  *****************************************************************************/
 #ifndef _DEBUG_H
@@ -26,13 +26,15 @@
 extern int debug;
 #endif
 
+#include "defs.h"
+
 #ifndef NS_NO_DECLARATIONS
 void log_init();
 void log_cleanup();
 
 char *packet_type(unsigned int type);
 void alog(int type, int errnum, const char *function, char *format, ...);
-void log_pkt_fields(AODV_msg * msg);
+void log_pkt_fields(AODV_msg *msg);
 void print_rt_table(void *arg);
 void log_rt_table_init();
 char *ip_to_str(struct in_addr addr);
@@ -40,21 +42,21 @@ char *ip_to_str(struct in_addr addr);
 #ifdef NS_PORT
 void write_to_log_file(char *msg, int len);
 char *devs_ip_to_str();
-char *rreq_flags_to_str(RREQ * rreq);
-char *rrep_flags_to_str(RREP * rrep);
+char *rreq_flags_to_str(RREQ *rreq);
+char *rrep_flags_to_str(RREP *rrep);
 char *rt_flags_to_str(u_int16_t flags);
 char *state_to_str(u_int8_t state);
 #endif
-#endif				/* NS_NO_DECLARATIONS */
+#endif /* NS_NO_DECLARATIONS */
 
 #ifndef NS_NO_GLOBALS
 #ifdef DEBUG
 #undef DEBUG
 #define DEBUG_OUTPUT
-#define DEBUG(l, s, args...) alog(l, s, __FUNCTION__, ## args)
+#define DEBUG(l, s, args...) alog(l, s, __FUNCTION__, ##args)
 #else
 #define DEBUG(l, s, args...)
 #endif
-#endif				/* NS_NO_GLOBALS */
+#endif /* NS_NO_GLOBALS */
 
-#endif				/* _DEBUG_H */
+#endif /* _DEBUG_H */
