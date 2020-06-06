@@ -290,7 +290,7 @@ void NS_CLASS hello_process(RREP * hello, int rreplen, unsigned int ifindex)
 				   message to take (due to processing) before
 				   assuming lost . */
 
-NS_INLINE void NS_CLASS hello_update_timeout(rt_table_t * rt,
+void NS_CLASS hello_update_timeout(rt_table_t * rt,
 					     struct timeval *now, long time)
 {
     timer_set_timeout(&rt->hello_timer, time + HELLO_DELAY);

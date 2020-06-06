@@ -100,7 +100,7 @@ rt_table_t *rt_table_insert(struct in_addr dest, struct in_addr next,
 rt_table_t *rt_table_update(rt_table_t * rt, struct in_addr next, u_int8_t hops,
 			    u_int32_t seqno, u_int32_t lifetime, u_int8_t state,
 			    u_int16_t flags);
-NS_INLINE rt_table_t *rt_table_update_timeout(rt_table_t * rt,
+rt_table_t *rt_table_update_timeout(rt_table_t * rt,
 					      u_int32_t lifetime);
 void rt_table_update_route_timeouts(rt_table_t * fwd_rt, rt_table_t * rev_rt);
 rt_table_t *rt_table_find(struct in_addr dest);
