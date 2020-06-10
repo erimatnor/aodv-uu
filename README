@@ -288,12 +288,6 @@ command:
 
 > route add default dev <wireless iface e.g., "eth1">
 
-Notes about the source code
-===========================
-
-libipq.c and libipq.h are unmodified files from the netfilter
-package which are included here for convenience.
-
 Contact:
 ========
 
